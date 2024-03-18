@@ -2,7 +2,7 @@ class Deck {
     constructor() {
         this.cards = [];
         for (let suit = 0; suit < 4; suit++) {
-            for (let value = 2; value <= 14; value++) {
+            for (let value = 1; value <= 13; value++) {
                 this.cards.push(new Card(suit, value));
             }
         }
@@ -26,23 +26,58 @@ class Card {
         this.suit = suit;
         this.value = value;
     }
+    get rank() {
+        switch(this.value) {
+            case 1:
+                return "A";
+            case 11:
+                return "J";
+            case 12:
+                return "Q";
+            case 13:
+                return "K";
+            default:
+                return this.value
+        }
+    }
+    get symbol() {
+        switch(this.suit) {
+            case 0:
+                return "♠";
+            case 1:
+                return "♥";
+            case 2:
+                return "♦";
+            case 3:
+                return "♣";
+        }
+    }
+
+    draw(ctx, x, y) {
+        ctx.strokeStyle = "black";
+        ctx.fillStyle = "white";
+        ctx.fill();
+        ctx.roundRect(x, y, 50, 70, 5);
+        ctx.stroke();
+        ctx.font = "20px Arial";
+        if (this.suit == 1 || this.suit == 2) {
+            ctx.fillStyle = "red";
+        }
+        else {
+            ctx.fillStyle = "black";
+        }
+        ctx.fillText(this.rank, x + 5, y + 20);
+        ctx.fillText(this.symbol, x + 5, y + 40);
+    }
 }
 
-window.onload = function () {
+i = 0;
+var deck = new Deck();
+deck.shuffle();
+
+function hit() {
     let canvas = document.getElementById("canvas")
     let ctx = canvas.getContext("2d");
-    var deck = new Deck();
-    deck.shuffle();
     let card = deck.draw();
-    drawCard(ctx, 100, 100, card);
-}
-
-function drawCard(ctx, x, y, card) {
-    ctx.strokeStyle = "black";
-    ctx.roundRect(x, y, 50, 70, 5);
-    ctx.stroke();
-    ctx.font = "20px Arial";
-    ctx.fillStyle = "black";
-    ctx.fillText(card.suit, x + 5, y + 20);
-    ctx.fillText(card.value, x + 5, y + 40);
+    card.draw(ctx, i++ * 60, 100);
 }
