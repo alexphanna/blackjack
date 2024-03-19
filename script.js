@@ -1,3 +1,55 @@
+class Player {
+    constructor(name, hand = []) {
+        this.name = name;
+        this.hand = hand;
+        this.score = 0;
+        this.standed = false;
+
+        // Create score display
+
+        this.scoreDisplay = document.createElement("div");
+        this.scoreDisplay.innerHTML = `<b>${this.name}</b>: ${this.score}`;
+        document.body.appendChild(this.scoreDisplay);
+
+        // Create canvas for cards
+
+        this.canvas = document.createElement("canvas");
+        this.canvas.width = 400;
+        this.canvas.height = 100;
+        document.body.appendChild(this.canvas);
+
+    }
+    hit() {
+        let card = deck.draw();
+        if (this.name == "Dealer" && this.hand.length == 0) {
+            card.flip();
+        }
+        card.draw(this.canvas.getContext("2d"), this.hand.length * 30 + 15, 15);
+        this.hand.push(card);
+        if (card.value > 10) {
+            this.score += 10;
+        }
+        else {
+            this.score += card.value;
+        }
+        this.scoreDisplay.innerHTML = `<b>${this.name}</b>: ${this.score}`;
+    }
+    stand() {
+        this.standed = true;
+    }
+    double() {
+        this.hit();
+        this.stand();
+    }
+    split() {
+        // do nothing
+    }
+    surrender() {
+        // do nothing
+    }
+
+}
+
 class Deck {
     constructor() {
         this.cards = [];
@@ -22,9 +74,10 @@ class Deck {
 }
 
 class Card {
-    constructor(suit, value) {
+    constructor(suit, value, faceUp = true) {
         this.suit = suit;
         this.value = value;
+        this.faceUp = faceUp;
     }
     get rank() {
         switch(this.value) {
@@ -52,32 +105,39 @@ class Card {
                 return "♣";
         }
     }
-
     draw(ctx, x, y) {
-        ctx.strokeStyle = "black";
-        ctx.fillStyle = "white";
-        ctx.fill();
-        ctx.roundRect(x, y, 50, 70, 5);
-        ctx.stroke();
-        ctx.font = "20px Arial";
-        if (this.suit == 1 || this.suit == 2) {
-            ctx.fillStyle = "red";
+        if (this.faceUp) {
+            ctx.fillStyle = "white";
+            ctx.fillRect(x, y, 50, 70);
+            ctx.strokeStyle = "black";
+            ctx.strokeRect(x, y, 50, 70);
+            ctx.font = "20px Arial";
+            if (this.suit == 1 || this.suit == 2) {
+                ctx.fillStyle = "red";
+            }
+            else {
+                ctx.fillStyle = "black";
+            }
+            ctx.fillText(this.rank, x + 5, y + 20);
+            ctx.fillText(this.symbol, x + 5, y + 40);
         }
         else {
-            ctx.fillStyle = "black";
+            ctx.fillStyle = "darkblue";
+            ctx.fillRect(x, y, 50, 70);
+            ctx.strokeStyle = "black";
+            ctx.strokeRect(x, y, 50, 70);
         }
-        ctx.fillText(this.rank, x + 5, y + 20);
-        ctx.fillText(this.symbol, x + 5, y + 40);
+    }
+    flip() {
+        this.faceUp = !this.faceUp;
     }
 }
 
-i = 0;
-var deck = new Deck();
+let deck = new Deck();
 deck.shuffle();
 
-function hit() {
-    let canvas = document.getElementById("canvas")
-    let ctx = canvas.getContext("2d");
-    let card = deck.draw();
-    card.draw(ctx, i++ * 60, 100);
-}
+let dealer = new Player("Dealer");
+let player = new Player("Player");
+
+dealer.hit();
+dealer.hit();
