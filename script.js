@@ -20,7 +20,7 @@ class Player {
 
     }
     hit() {
-        let card = deck.draw();
+        let card = deck.pop();
         if (this.name == "Dealer" && this.hand.length == 0) {
             card.flip();
         }
@@ -51,26 +51,26 @@ class Player {
 }
 
 class Deck {
-    constructor() {
-        this.cards = [];
+    static default() {
+        var cards = [];
         for (let suit = 0; suit < 4; suit++) {
             for (let value = 1; value <= 13; value++) {
-                this.cards.push(new Card(suit, value));
+                cards.push(new Card(suit, value));
             }
         }
+        return cards;
     }
-    shuffle() {
-        for (let i = 0; i < this.cards.length; i++) {
-            let j = Math.floor(Math.random() * this.cards.length);
-            let temp = this.cards[i];
-            this.cards[i] = this.cards[j];
-            this.cards[j] = temp;
+    static shuffle(oldCards) {
+        var newCards = oldCards;
+        for (let i = 0; i < oldCards.length; i++) {
+            var j = Math.floor(Math.random() * (i + 1));
+            if (j != i) {
+                newCards[i] = newCards[j];
+            }
+            newCards[j] = oldCards[i];
         }
+        return newCards;
     }
-    draw() {
-        return this.cards.pop();
-    }
-
 }
 
 class Card {
@@ -133,8 +133,8 @@ class Card {
     }
 }
 
-let deck = new Deck();
-deck.shuffle();
+var deck = Deck.default();
+deck = Deck.shuffle(deck);
 
 let dealer = new Player("Dealer");
 let player = new Player("Player");
