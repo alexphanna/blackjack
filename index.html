@@ -6,11 +6,21 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <h1>Blackjack</h1>
+    <div id="dealer-hand" class="hand">
+        <h2 id="dealer-heading">Dealer</h2>
+        <canvas id="dealer-canvas" width="400" height="100"></canvas>
+    </div>
+    <div id="player-hand" class="hand"> 
+        <h2 id="player-heading">Player</h2>
+        <canvas id="player-canvas" width="400" height="100"></canvas>
+    </div>
     <button type="button" onclick="player.hit()">Hit</button>
-    <button type="button" onclick="stand()">Stand</button>
-    <button type="button" onclick="double()">Double</button>
-    <button type="button" onclick="split()">Split</button>
-    <button type="button" onclick="surrender()">Surrender</button>
+    <button type="button" onclick="player.stand()">Stand</button>
+    <button type="button" onclick="player.double()">Double</button>
+    <button type="button" onclick="player.split()">Split</button>
+    <button type="button" onclick="player.surrender()">Surrender</button>
+
     <script src="script.js"></script>
 </body>
 </html>

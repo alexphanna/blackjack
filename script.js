@@ -2,40 +2,59 @@ class Player {
     constructor(name, hand = []) {
         this.name = name;
         this.hand = hand;
-        this.score = 0;
-        this.standed = false;
-
-        // Create score display
-
-        this.scoreDisplay = document.createElement("div");
-        this.scoreDisplay.innerHTML = `<b>${this.name}</b>: ${this.score}`;
-        document.body.appendChild(this.scoreDisplay);
-
-        // Create canvas for cards
-
-        this.canvas = document.createElement("canvas");
-        this.canvas.width = 400;
-        this.canvas.height = 100;
-        document.body.appendChild(this.canvas);
-
+        this.canvas = document.getElementById(name + "-canvas");
+        this.heading = document.getElementById(name + "-heading");
+    }
+    get score() {
+        var sum = [0];
+        for (let card of this.hand) {
+            if (card.faceUp) {
+                if (card.value == 1) {
+                    sum.push(sum[sum.length - 1] + 10);
+                }
+                if (card.value > 10) {
+                    for (let i = 0; i < sum.length; i++) {
+                        sum[i] += 10;
+                    }
+                }
+                else {
+                    for (let i = 0; i < sum.length; i++) {
+                        sum[i] += card.value;
+                    }
+                }
+                for (let i = 0; i < sum.length; i++) {
+                    if (sum[i] > 21) {
+                        sum.splice(i, sum.length - i);
+                        break;
+                    }
+                }
+            }
+        }
+        return sum;
+    }
+    drawHand() {
+        this.canvas.getContext("2d").clearRect(0, 0, this.canvas.width, this.canvas.height);
+        for (let i = 0; i < this.hand.length; i++) {
+            this.hand[i].draw(this.canvas.getContext("2d"), i * 30 + 15, 15);
+        }
     }
     hit() {
         let card = deck.pop();
-        if (this.name == "Dealer" && this.hand.length == 0) {
+        if (this.name == "dealer" && this.hand.length == 0) {
             card.flip();
         }
-        card.draw(this.canvas.getContext("2d"), this.hand.length * 30 + 15, 15);
         this.hand.push(card);
-        if (card.value > 10) {
-            this.score += 10;
-        }
-        else {
-            this.score += card.value;
-        }
-        this.scoreDisplay.innerHTML = `<b>${this.name}</b>: ${this.score}`;
+        this.heading.innerHTML = `<b>${this.name}</b>: ${this.score}`;
+        this.drawHand();
     }
     stand() {
-        this.standed = true;
+        dealer.hand[0].flip();
+        dealer.drawHand();
+        dealer.heading.innerHTML = `<b>${dealer.name}</b>: ${dealer.score}`;
+        // While dealer's highest score is less than 17, hit
+        while (dealer.score[this.score.length - 1] < 17) {
+            dealer.hit();
+        }
     }
     double() {
         this.hit();
@@ -51,7 +70,8 @@ class Player {
 }
 
 class Deck {
-    static default() {
+    // Create an unshuffled deck of cards
+    static createDeck() {
         var cards = [];
         for (let suit = 0; suit < 4; suit++) {
             for (let value = 1; value <= 13; value++) {
@@ -60,8 +80,9 @@ class Deck {
         }
         return cards;
     }
+    // Shuffle the deck
     static shuffle(oldCards) {
-        var newCards = oldCards;
+        var newCards = [...oldCards];
         for (let i = 0; i < oldCards.length; i++) {
             var j = Math.floor(Math.random() * (i + 1));
             if (j != i) {
@@ -105,13 +126,14 @@ class Card {
                 return "♣";
         }
     }
+    // Draw the card on the canvas
     draw(ctx, x, y) {
         if (this.faceUp) {
             ctx.fillStyle = "white";
             ctx.fillRect(x, y, 50, 70);
             ctx.strokeStyle = "black";
             ctx.strokeRect(x, y, 50, 70);
-            ctx.font = "20px Arial";
+            ctx.font = "20px Arial, sans-serif";
             if (this.suit == 1 || this.suit == 2) {
                 ctx.fillStyle = "red";
             }
@@ -128,16 +150,22 @@ class Card {
             ctx.strokeRect(x, y, 50, 70);
         }
     }
+    // Flip the card
     flip() {
         this.faceUp = !this.faceUp;
     }
 }
 
-var deck = Deck.default();
+// Create deck
+var deck = Deck.createDeck();
 deck = Deck.shuffle(deck);
 
-let dealer = new Player("Dealer");
-let player = new Player("Player");
+// Create players
+let dealer = new Player("dealer");
+let player = new Player("player");
 
+// Deal cards
 dealer.hit();
 dealer.hit();
+player.hit();
+player.hit();
