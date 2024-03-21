@@ -2,8 +2,8 @@ class Player {
     constructor(name, hand = []) {
         this.name = name;
         this.hand = hand;
-        this.canvas = document.getElementById(name + "-canvas");
-        this.heading = document.getElementById(name + "-heading");
+        this.canvas = document.getElementById(name.toLowerCase() + "-canvas");
+        this.heading = document.getElementById(name.toLowerCase() + "-heading");
     }
     get score() {
         var sum = [0];
@@ -22,12 +22,6 @@ class Player {
                         sum[i] += card.value;
                     }
                 }
-                for (let i = 0; i < sum.length; i++) {
-                    if (sum[i] > 21) {
-                        sum.splice(i, sum.length - i);
-                        break;
-                    }
-                }
             }
         }
         return sum;
@@ -40,19 +34,24 @@ class Player {
     }
     hit() {
         let card = deck.pop();
-        if (this.name == "dealer" && this.hand.length == 0) {
+        if (this.name == "Dealer" && this.hand.length == 0) {
             card.flip();
         }
         this.hand.push(card);
         this.heading.innerHTML = `<b>${this.name}</b>: ${this.score}`;
         this.drawHand();
+        if (this.name == "Player" && this.score > 21) {
+            document.getElementById("buttons").style.display = "none";
+            document.getElementById("restartButton").style.display = "inline";
+            heading.innerHTML = "Bust!"
+        }
     }
     stand() {
         dealer.hand[0].flip();
         dealer.drawHand();
         dealer.heading.innerHTML = `<b>${dealer.name}</b>: ${dealer.score}`;
         // While dealer's highest score is less than 17, hit
-        while (dealer.score[this.score.length - 1] < 17) {
+        while (dealer.score[dealer.score.length - 1] < 17) {
             dealer.hit();
         }
     }
@@ -156,16 +155,38 @@ class Card {
     }
 }
 
-// Create deck
-var deck = Deck.createDeck();
-deck = Deck.shuffle(deck);
+function evaluate() {
+    if (player.score > dealer.score) {
+        heading.innerHTML = "You win!";
+    }
+    else if (dealer.score > player.score) {
+        heading.innerHTML = "You lose!";
+    }
+    else {
+        heading.innerHTML = "Draw";
+    }
+}
 
-// Create players
-let dealer = new Player("dealer");
-let player = new Player("player");
+function start() {
+    deck = Deck.createDeck();
+    deck = Deck.shuffle(deck);  
 
-// Deal cards
-dealer.hit();
-dealer.hit();
-player.hit();
-player.hit();
+    // Create players
+    dealer = new Player("Dealer");
+    player = new Player("Player");
+    
+    // Deal cards
+    dealer.hit();
+    dealer.hit();
+    player.hit();
+    player.hit();
+
+    document.getElementById("buttons").style.display = "inline";
+    document.getElementById("restartButton").style.display = "none";
+}
+
+var deck;
+var dealer;
+var player;
+
+start();
