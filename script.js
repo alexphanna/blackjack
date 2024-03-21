@@ -22,6 +22,12 @@ class Player {
                         sum[i] += card.value;
                     }
                 }
+                for (let i = 0; i < sum.length; i++) {
+                    if (sum[i] > 21) {
+                        sum.splice(i, sum.length - i);
+                        break;
+                    }
+                }
             }
         }
         return sum;
@@ -40,10 +46,17 @@ class Player {
         this.hand.push(card);
         this.heading.innerHTML = `<b>${this.name}</b>: ${this.score}`;
         this.drawHand();
-        if (this.name == "Player" && this.score > 21) {
+        if (this.score.length == 0) {
             document.getElementById("buttons").style.display = "none";
             document.getElementById("restartButton").style.display = "inline";
-            heading.innerHTML = "Bust!"
+            if (this.name == "Player") {
+                heading.style.color = "red";
+                heading.innerHTML = "Bust!"
+            }
+            else {
+                heading.style.color = "lime";
+                heading.innerHTML = "You win!"
+            }
         }
     }
     stand() {
@@ -53,6 +66,22 @@ class Player {
         // While dealer's highest score is less than 17, hit
         while (dealer.score[dealer.score.length - 1] < 17) {
             dealer.hit();
+        }
+        document.getElementById("buttons").style.display = "none";
+        document.getElementById("restartButton").style.display = "inline";
+        if (heading.innerHTML == "Blackjack") {
+            if (player.score[player.score.length - 1] > dealer.score[dealer.score.length - 1]) {
+                heading.style.color = "lime";
+                heading.innerHTML = "You win!";
+            }
+            else if (dealer.score[dealer.score.length - 1] > player.score[player.score.length - 1]) {
+                heading.style.color = "red";
+                heading.innerHTML = "You lose!";
+            }
+            else {
+                heading.style.color = "white";
+                heading.innerHTML = "Draw";
+            }
         }
     }
     double() {
@@ -155,18 +184,6 @@ class Card {
     }
 }
 
-function evaluate() {
-    if (player.score > dealer.score) {
-        heading.innerHTML = "You win!";
-    }
-    else if (dealer.score > player.score) {
-        heading.innerHTML = "You lose!";
-    }
-    else {
-        heading.innerHTML = "Draw";
-    }
-}
-
 function start() {
     deck = Deck.createDeck();
     deck = Deck.shuffle(deck);  
@@ -181,6 +198,8 @@ function start() {
     player.hit();
     player.hit();
 
+    heading.style.color = "white";
+    heading.innerHTML = "Blackjack";
     document.getElementById("buttons").style.display = "inline";
     document.getElementById("restartButton").style.display = "none";
 }
