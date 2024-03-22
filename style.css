@@ -1,20 +1,31 @@
-html {
-    text-align: center;
-}
+/* black - #000000
+ * 25% gray - #404040
+ * 50% gray - #808080
+ * 75% gray - #C0C0C0
+ * white - #FFFFFF
+ */
 
-body {
+html {
+    color: #404040;
+    text-align: center;
+    background-color: #C0C0C0;
     margin: 0 0;
-    background-color: #141;
-    color: white;
     font-family: Arial, Helvetica, sans-serif;
 }
 
-button {
-    background-color: white;
+button { 
+    border: none;
     color: black;
+    background-color: #808080;
     padding: 10px 20px;
-    text-align: center;
     font-size: 16px;
     margin: 4px 2px;
     cursor: pointer;
+}
+
+
+button:hover {
+    background-color: #404040;
+    color: white;
+    transition: .25s;
 }

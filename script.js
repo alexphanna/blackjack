@@ -35,7 +35,7 @@ class Player {
     drawHand() {
         this.canvas.getContext("2d").clearRect(0, 0, this.canvas.width, this.canvas.height);
         for (let i = 0; i < this.hand.length; i++) {
-            this.hand[i].draw(this.canvas.getContext("2d"), i * 30 + 15, 15);
+            this.hand[i].draw(this.canvas.getContext("2d"), (200 - (this.hand.length - 1) * 15 - 25) + (i * 30), 15);
         }
     }
     hit() {
@@ -79,7 +79,7 @@ class Player {
                 heading.innerHTML = "You lose!";
             }
             else {
-                heading.style.color = "white";
+                heading.style.color = "black";
                 heading.innerHTML = "Draw";
             }
         }
@@ -198,10 +198,17 @@ function start() {
     player.hit();
     player.hit();
 
-    heading.style.color = "white";
+    heading.style.color = "black";
     heading.innerHTML = "Blackjack";
     document.getElementById("buttons").style.display = "inline";
     document.getElementById("restartButton").style.display = "none";
+
+    if (player.score[player.score.length - 1] == 21) {
+        heading.style.color = "lime";
+        heading.innerHTML = "Blackjack";
+        document.getElementById("buttons").style.display = "none";
+        document.getElementById("restartButton").style.display = "inline";
+    }
 }
 
 var deck;
