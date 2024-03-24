@@ -1,31 +1,31 @@
-/* black - #000000
- * 25% gray - #404040
- * 50% gray - #808080
- * 75% gray - #C0C0C0
- * white - #FFFFFF
- */
-
 html {
     background-color: #141;
-    /*color: #404040;
     text-align: center;
-    margin: 0 0;
-    font-family: Arial, Helvetica, sans-serif;*/
+    font-family: Arial, Helvetica, sans-serif;
 }
 
-/*button { 
+svg {
+    margin: 8px;
+    /* Source: https://css-tricks.com/adding-shadows-to-svg-icons-with-css-and-svg-filters/ */
+
+}
+
+rect {
+    filter: drop-shadow(0px 0px 2px rgb(0 0 0 / 0.4));
+}
+
+button { 
     border: none;
-    color: black;
-    background-color: #808080;
+    color: white;
+    background-color: #282;
+    border-radius: 5px;
     padding: 10px 20px;
     font-size: 16px;
-    margin: 4px 2px;
     cursor: pointer;
+    margin: 8px 4px;
+    filter: drop-shadow(0px 0px 2px rgb(0 0 0 / 0.4));
 }
 
-
 button:hover {
-    background-color: #404040;
-    color: white;
-    transition: .25s;
-}*/
+    background-color: #484;
+}

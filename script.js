@@ -7,12 +7,41 @@ class Player {
 class Hand {
     constructor(cards = []) {
         this.cards = cards;
-        this.canvas = document.getElementById(name.toLowerCase() + "-canvas");
+
+        /*this.heading = document.createElement("h2");
+        this.heading.innerHTML = `${this.score}`;
+        document.body.appendChild(this.heading);*/
+
+        this.svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        this.svg.setAttribute('width', this.cards.length * 30 + 50);
+        this.svg.setAttribute('height', '70');
+        document.body.appendChild(this.svg);
+
+        let linebreak = document.createElement("br");
+        document.body.appendChild(linebreak);
+
+        this.hitButton = document.createElement("button");
+        this.hitButton.onclick = () => this.hit();
+        this.hitButton.innerHTML = "Hit";
+        document.body.appendChild(this.hitButton);
+
+        this.standButton = document.createElement("button");
+        this.standButton.onclick = () => this.stand();
+        this.standButton.innerHTML = "Stand";
+        document.body.appendChild(this.standButton);
+
+        this.splitButton = document.createElement("button");
+        this.splitButton.onclick = () => this.split();
+        this.splitButton.innerHTML = "Split";
+        document.body.appendChild(this.splitButton);
+
+        linebreak = document.createElement("br");
+        document.body.appendChild(linebreak);
     }
     
     get score() {
         var sum = [0];
-        for (let card of this.hand) {
+        for (let card of this.cards) {
             if (card.faceUp) {
                 if (card.value == 1) {
                     sum.push(sum[sum.length - 1] + 10);
@@ -37,32 +66,11 @@ class Hand {
         }
         return sum;
     }
-    draw() {
-        this.canvas.getContext("2d").clearRect(0, 0, this.canvas.width, this.canvas.height);
-        for (let i = 0; i < this.cards.length; i++) {
-            this.cards[i].draw(this.canvas.getContext("2d"), (200 - (this.cards.length - 1) * 15 - 25) + (i * 30), 15);
-        }
-    }
     hit() {
         let card = deck.pop();
-        if (this.name == "Dealer" && this.cards.length == 0) {
-            card.flip();
-        }
         this.cards.push(card);
-        this.heading.innerHTML = `<b>${this.name}</b>: ${this.score}`;
-        this.drawCard();
-        if (this.score.length == 0) {
-            document.getElementById("buttons").style.display = "none";
-            document.getElementById("restartButton").style.display = "inline";
-            if (this.name == "Player") {
-                heading.style.color = "red";
-                heading.innerHTML = "Bust!"
-            }
-            else {
-                heading.style.color = "lime";
-                heading.innerHTML = "You win!"
-            }
-        }
+        this.svg.setAttribute('width', (this.cards.length - 1) * 30 + 50);
+        card.draw(this.svg, (this.cards.length - 1) * 30 + 0, 0);
     }
     stand() {
         dealer.cards[0].flip();
@@ -153,31 +161,56 @@ class Card {
             case 1:
                 return "♥";
             case 2:
-                return "♦";
-            case 3:
                 return "♣";
+            case 3:
+                return "♦";
         }
     }
     // Flip the card
     flip() {
         this.faceUp = !this.faceUp;
     }
-}
 
-function draw() {
-    var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    draw(svg, x, y) {
+        var rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        rect.setAttribute('width', '50');
+        rect.setAttribute('height', '70');
+        rect.setAttribute('x', x);
+        rect.setAttribute('y', y);
+        rect.setAttribute('rx', '5');
+        rect.setAttribute('ry', '5');
+        rect.setAttribute('fill', 'white');
+        svg.appendChild(rect);
+
+        var color = this.suit % 2 == 0 ? "black" : "red";
     
-    var rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-    rect.setAttribute('width', '50');
-    rect.setAttribute('height', '70');
-    rect.setAttribute('x', '0');
-    rect.setAttribute('y', '20');
-    rect.setAttribute('rx', '5');
-    rect.setAttribute('ry', '5');
-    rect.setAttribute('fill', 'white');
-    svg.appendChild(rect);
-
-    document.body.appendChild(svg);
+        var text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        text.setAttribute('dominant-baseline', 'hanging');
+        text.setAttribute('x', x + 5);
+        text.setAttribute('y', y + 5);
+        text.setAttribute('font-family', 'monospace');
+        text.setAttribute('font-size', '20');
+        text.setAttribute('fill', color);
+        text.innerHTML = this.rank;
+        svg.appendChild(text);
+    
+        text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        text.setAttribute('x', x + 5);
+        text.setAttribute('y', y + 35);
+        text.setAttribute('font-family', 'monospace');
+        text.setAttribute('font-size', '20');
+        text.setAttribute('fill', color);
+        text.innerHTML = this.symbol;
+        svg.appendChild(text);
+    }
 }
 
-draw();
+var deck = Deck.shuffle(Deck.createDeck());
+
+var hand = new Hand();
+hand.hit();
+hand.hit();
+
+var dealer = new Hand();
+dealer.hit();
+dealer.hit();
