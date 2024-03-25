@@ -2,41 +2,59 @@ class Player {
     constructor(name) {
         this.name = name 
         this.hands = []
+
+        this.heading = document.createElement("h2");
+        this.heading.innerHTML = `${this.name}`;
+        document.body.appendChild(this.heading);
+    }
+    draw() {
+        for (let hand of this.hands) {
+            hand.draw()
+        }
     }
 }
 class Hand {
-    constructor(cards = []) {
+    constructor(isDealer = false, cards = []) {
         this.cards = cards;
 
-        /*this.heading = document.createElement("h2");
-        this.heading.innerHTML = `${this.score}`;
-        document.body.appendChild(this.heading);*/
+        this.div = document.createElement("div");
 
         this.svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        this.svg.setAttribute('width', this.cards.length * 30 + 50);
-        this.svg.setAttribute('height', '70');
-        document.body.appendChild(this.svg);
+        this.svg.setAttribute('width', this.cards.length * 30 + 70);
+        this.svg.setAttribute('height', '90');
+        this.svg.setAttribute('style', 'display: inline-block');
+        this.div.appendChild(this.svg);
+
+        this.heading = document.createElement("p");
+        this.heading.innerHTML = `${this.score}`;
+        this.heading.setAttribute('style', 'display: inline-block');
+        this.div.appendChild(this.heading);
+
+        document.body.appendChild(this.div);
+
 
         let linebreak = document.createElement("br");
         document.body.appendChild(linebreak);
 
-        this.hitButton = document.createElement("button");
-        this.hitButton.onclick = () => this.hit();
-        this.hitButton.innerHTML = "Hit";
-        document.body.appendChild(this.hitButton);
-
-        this.standButton = document.createElement("button");
-        this.standButton.onclick = () => this.stand();
-        this.standButton.innerHTML = "Stand";
-        document.body.appendChild(this.standButton);
-
-        this.splitButton = document.createElement("button");
-        this.splitButton.onclick = () => this.split();
-        this.splitButton.innerHTML = "Split";
-        document.body.appendChild(this.splitButton);
-
-        linebreak = document.createElement("br");
-        document.body.appendChild(linebreak);
+        if (!isDealer) {
+            this.hitButton = document.createElement("button");
+            this.hitButton.onclick = () => this.hit();
+            this.hitButton.innerHTML = "Hit";
+            document.body.appendChild(this.hitButton);
+    
+            this.standButton = document.createElement("button");
+            this.standButton.onclick = () => this.stand();
+            this.standButton.innerHTML = "Stand";
+            document.body.appendChild(this.standButton);
+    
+            this.splitButton = document.createElement("button");
+            this.splitButton.onclick = () => this.split();
+            this.splitButton.innerHTML = "Split";
+            document.body.appendChild(this.splitButton);
+    
+            linebreak = document.createElement("br");
+            document.body.appendChild(linebreak);
+        }
     }
     
     get score() {
@@ -68,9 +86,13 @@ class Hand {
     }
     hit() {
         let card = deck.pop();
+        if (this.isDealer && this.cards.length == 0) {
+            card.flip();
+        }
         this.cards.push(card);
-        this.svg.setAttribute('width', (this.cards.length - 1) * 30 + 50);
+        this.svg.setAttribute('width', (this.cards.length - 1) * 30 + 70);
         card.draw(this.svg, (this.cards.length - 1) * 30 + 0, 0);
+        this.heading.innerHTML = `${this.score}`;
     }
     stand() {
         dealer.cards[0].flip();
@@ -175,42 +197,59 @@ class Card {
         var rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
         rect.setAttribute('width', '50');
         rect.setAttribute('height', '70');
-        rect.setAttribute('x', x);
-        rect.setAttribute('y', y);
+        rect.setAttribute('x', x + 10);
+        rect.setAttribute('y', y + 10);
         rect.setAttribute('rx', '5');
         rect.setAttribute('ry', '5');
-        rect.setAttribute('fill', 'white');
+        rect.setAttribute('fill', this.faceUp ? 'white' : 'white');
         svg.appendChild(rect);
 
-        var color = this.suit % 2 == 0 ? "black" : "red";
-    
-        var text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-        text.setAttribute('dominant-baseline', 'hanging');
-        text.setAttribute('x', x + 5);
-        text.setAttribute('y', y + 5);
-        text.setAttribute('font-family', 'monospace');
-        text.setAttribute('font-size', '20');
-        text.setAttribute('fill', color);
-        text.innerHTML = this.rank;
-        svg.appendChild(text);
-    
-        text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-        text.setAttribute('x', x + 5);
-        text.setAttribute('y', y + 35);
-        text.setAttribute('font-family', 'monospace');
-        text.setAttribute('font-size', '20');
-        text.setAttribute('fill', color);
-        text.innerHTML = this.symbol;
-        svg.appendChild(text);
+        if (this.faceUp) {
+            var color = this.suit % 2 == 0 ? "black" : "red";
+        
+            var text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            text.setAttribute('dominant-baseline', 'hanging');
+            text.setAttribute('x', x + 15);
+            text.setAttribute('y', y + 15);
+            text.setAttribute('fill', color);
+            text.innerHTML = this.rank;
+            svg.appendChild(text);
+        
+            text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            text.setAttribute('x', x + 15);
+            text.setAttribute('y', y + 45);
+            text.setAttribute('fill', color);
+            text.innerHTML = this.symbol;
+            svg.appendChild(text);
+        }
+        else {
+            rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            rect.setAttribute('width', '48');
+            rect.setAttribute('height', '68');
+            rect.setAttribute('x', x + 11);
+            rect.setAttribute('y', y + 11);
+            rect.setAttribute('rx', '5');
+            rect.setAttribute('ry', '5');
+            rect.setAttribute('fill', 'darkblue');
+            rect.setAttribute('filter', 'none');
+            svg.appendChild(rect);
+        }
     }
 }
 
 var deck = Deck.shuffle(Deck.createDeck());
 
+
+var dealer = new Player("Dealer");
+
+var hand2 = new Hand(true);
+hand2.hit();
+hand2.hit();
+dealer.hands.push(hand2)
+
+var alex = new Player("Alex");
+
 var hand = new Hand();
 hand.hit();
 hand.hit();
-
-var dealer = new Hand();
-dealer.hit();
-dealer.hit();
+alex.hands.push(hand)
