@@ -1,20 +1,30 @@
 class Player {
     constructor(name) {
         this.name = name 
+        this.money = 1000
         this.hands = []
 
         this.heading = document.createElement("h2");
-        this.heading.innerHTML = `${this.name}`;
-        document.body.appendChild(this.heading);
+        this.update();
+        game.appendChild(this.heading);
     }
     draw() {
         for (let hand of this.hands) {
             hand.draw()
         }
     }
+    update() {
+        if (this.name == "Dealer") {
+            this.heading.innerHTML = `${this.name}`;
+        }
+        else {
+            this.heading.innerHTML = `${this.name}: ${this.money}`;
+        }
+    }
 }
 class Hand {
-    constructor(isDealer = false, cards = []) {
+    constructor(holder, cards = []) {
+        this.holder = holder
         this.cards = cards;
 
         this.div = document.createElement("div");
@@ -25,35 +35,45 @@ class Hand {
         this.svg.setAttribute('style', 'display: inline-block');
         this.div.appendChild(this.svg);
 
-        this.heading = document.createElement("p");
-        this.heading.innerHTML = `${this.score}`;
-        this.heading.setAttribute('style', 'display: inline-block');
-        this.div.appendChild(this.heading);
+        this.scoreText = document.createElement("p");
+        this.scoreText.innerHTML = `${this.score}`;
+        this.scoreText.setAttribute('style', 'display: inline-block');
+        this.div.appendChild(this.scoreText);
 
-        document.body.appendChild(this.div);
+        game.appendChild(this.div);
 
 
         let linebreak = document.createElement("br");
-        document.body.appendChild(linebreak);
+        game.appendChild(linebreak);
 
-        if (!isDealer) {
+        if (this.holder.name != "Dealer") {
             this.hitButton = document.createElement("button");
             this.hitButton.onclick = () => this.hit();
             this.hitButton.innerHTML = "Hit";
-            document.body.appendChild(this.hitButton);
+            game.appendChild(this.hitButton);
     
             this.standButton = document.createElement("button");
             this.standButton.onclick = () => this.stand();
             this.standButton.innerHTML = "Stand";
-            document.body.appendChild(this.standButton);
+            game.appendChild(this.standButton);
     
             this.splitButton = document.createElement("button");
             this.splitButton.onclick = () => this.split();
             this.splitButton.innerHTML = "Split";
-            document.body.appendChild(this.splitButton);
+            game.appendChild(this.splitButton);
+    
+            this.doubleButton = document.createElement("button");
+            this.doubleButton.onclick = () => this.double();
+            this.doubleButton.innerHTML = "Double";
+            game.appendChild(this.doubleButton);
+    
+            this.surrenderButton = document.createElement("button");
+            this.surrenderButton.onclick = () => this.surrender();
+            this.surrenderButton.innerHTML = "Surrender";
+            game.appendChild(this.surrenderButton);
     
             linebreak = document.createElement("br");
-            document.body.appendChild(linebreak);
+            game.appendChild(linebreak);
         }
     }
     
@@ -74,56 +94,76 @@ class Hand {
                         sum[i] += card.value;
                     }
                 }
-                for (let i = 0; i < sum.length; i++) {
+                /*for (let i = 0; i < sum.length; i++) {
                     if (sum[i] > 21) {
                         sum.splice(i, sum.length - i);
                         break;
                     }
-                }
+                }*/
             }
         }
         return sum;
     }
+    draw() {
+        // remove all children from an element
+        while (this.svg.firstChild) {
+            this.svg.removeChild(this.svg.firstChild);
+        }
+        this.svg.setAttribute('width', (this.cards.length - 1) * 30 + 70);
+        for (let i = 0; i < this.cards.length; i++) {
+            this.cards[i].draw(this.svg, i * 30 + 0, 0);
+        }
+        this.scoreText.innerHTML = `${this.score}`;
+    }
     hit() {
         let card = deck.pop();
-        if (this.isDealer && this.cards.length == 0) {
+        if (this.holder.name == "Dealer" && this.cards.length == 0) {
             card.flip();
         }
         this.cards.push(card);
         this.svg.setAttribute('width', (this.cards.length - 1) * 30 + 70);
         card.draw(this.svg, (this.cards.length - 1) * 30 + 0, 0);
-        this.heading.innerHTML = `${this.score}`;
+        this.scoreText.innerHTML = `${this.score}`;
+        if (this.holder.name != "Dealer") {
+            if (this.score > 21) {
+                alert("Bust!")
+            }
+        }
     }
     stand() {
-        dealer.cards[0].flip();
-        dealer.drawCard();
-        dealer.heading.innerHTML = `<b>${dealer.name}</b>: ${dealer.score}`;
+        dealer.hands[0].cards[0].flip();
+        dealer.hands[0].scoreText.innerHTML = `${dealer.hands[0].score}`;
+        dealer.hands[0].draw();
         // While dealer's highest score is less than 17, hit
-        while (dealer.score[dealer.score.length - 1] < 17) {
-            dealer.hit();
+        while (dealer.hands[0].score[dealer.hands[0].score.length - 1] < 17) {
+            dealer.hands[0].hit();
         }
-        document.getElementById("buttons").style.display = "none";
-        document.getElementById("restartButton").style.display = "inline";
-        if (heading.innerHTML == "Blackjack") {
-            if (player.score[player.score.length - 1] > dealer.score[dealer.score.length - 1]) {
-                heading.style.color = "lime";
-                heading.innerHTML = "You win!";
-            }
-            else if (dealer.score[dealer.score.length - 1] > player.score[player.score.length - 1]) {
-                heading.style.color = "red";
-                heading.innerHTML = "You lose!";
-            }
-            else {
-                heading.style.color = "black";
-                heading.innerHTML = "Draw";
-            }
+        if (dealer.hands[0].score > 21 || this.score > dealer.hands[0].score) {
+            alert("You win :)")
+            start();
+            this.holder.money += 100;
+            this.holder.update();
+        }
+        else if (this.score < dealer.hands[0].score) {
+            alert("You lose :(")
+            this.holder.money -= 100;
+            this.holder.update();
+        }
+        else {
+            alert("Draw :|")
         }
     }
     double() {
         // do nothing
     }
     split() {
-        // do nothing
+        if (this.cards.length == 2 && this.cards[0].points == this.cards[1].points) {
+            var newHand = new Hand(this.holder);
+            this.holder += newHand;
+            newHand.cards.push(this.cards.pop());
+            this.draw();
+            newHand.draw();
+        }
     }
     surrender() {
         // do nothing
@@ -160,6 +200,16 @@ class Card {
     constructor(suit, value, faceUp = true) {
         this.suit = suit;
         this.value = value;
+        switch(this.value) {
+            case 11:
+            case 12:
+            case 13:
+                this.points = 10;
+                break;
+            default:
+                this.points = this.value
+                break;
+        }
         this.faceUp = faceUp;
     }
     get rank() {
@@ -237,19 +287,36 @@ class Card {
     }
 }
 
-var deck = Deck.shuffle(Deck.createDeck());
+function start() {
+    while (game.firstChild) {
+        game.removeChild(game.firstChild);
+    }
+    player.hands = [];
+    player.update
+    dealer.hands = [];
 
+    deck = Deck.shuffle(Deck.createDeck());
 
+    let hand = new Hand(dealer);;
+    hand.hit();
+    hand.hit();
+    dealer.hands.push(hand)
+    
+    hand = new Hand(player);
+    hand.hit();
+    hand.hit();
+    player.hands.push(hand)
+    
+    // Check for blackjack on deal
+    
+    if (player.hands[0].score.includes(21)) {
+        alert("Blackjack!")
+    }
+}
+
+var game = document.getElementById("game");
+var deck;
 var dealer = new Player("Dealer");
+var player = new Player("Alex");
 
-var hand2 = new Hand(true);
-hand2.hit();
-hand2.hit();
-dealer.hands.push(hand2)
-
-var alex = new Player("Alex");
-
-var hand = new Hand();
-hand.hit();
-hand.hit();
-alex.hands.push(hand)
+start();
