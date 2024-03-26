@@ -1,12 +1,12 @@
 class Player {
     constructor(name) {
-        this.name = name 
-        this.money = 1000
-        this.hands = []
+        this.name = name;
+        this.money = 1000;
+        this.bet = 100;
+        this.hands = [];
 
-        this.heading = document.createElement("h2");
+        this.heading = document.createElement("h3");
         this.update();
-        game.appendChild(this.heading);
     }
     draw() {
         for (let hand of this.hands) {
@@ -47,33 +47,39 @@ class Hand {
         game.appendChild(linebreak);
 
         if (this.holder.name != "Dealer") {
+            this.buttons = document.createElement("div");
+            this.buttons.setAttribute('style', 'display: inline-block');
+            game.appendChild(this.buttons);
+
             this.hitButton = document.createElement("button");
             this.hitButton.onclick = () => this.hit();
             this.hitButton.innerHTML = "Hit";
-            game.appendChild(this.hitButton);
+            this.buttons.appendChild(this.hitButton);
     
             this.standButton = document.createElement("button");
             this.standButton.onclick = () => this.stand();
             this.standButton.innerHTML = "Stand";
-            game.appendChild(this.standButton);
+            this.buttons.appendChild(this.standButton);
     
             this.splitButton = document.createElement("button");
             this.splitButton.onclick = () => this.split();
             this.splitButton.innerHTML = "Split";
-            game.appendChild(this.splitButton);
+            this.buttons.appendChild(this.splitButton);
     
             this.doubleButton = document.createElement("button");
             this.doubleButton.onclick = () => this.double();
             this.doubleButton.innerHTML = "Double";
-            game.appendChild(this.doubleButton);
+            this.buttons.appendChild(this.doubleButton);
     
             this.surrenderButton = document.createElement("button");
             this.surrenderButton.onclick = () => this.surrender();
             this.surrenderButton.innerHTML = "Surrender";
-            game.appendChild(this.surrenderButton);
+            this.buttons.appendChild(this.surrenderButton);
+
+            game.appendChild(this.buttons);
     
             linebreak = document.createElement("br");
-            game.appendChild(linebreak);
+            this.buttons.appendChild(linebreak);
         }
     }
     
@@ -94,12 +100,12 @@ class Hand {
                         sum[i] += card.value;
                     }
                 }
-                /*for (let i = 0; i < sum.length; i++) {
+                for (let i = 0; i < sum.length; i++) {
                     if (sum[i] > 21) {
                         sum.splice(i, sum.length - i);
                         break;
                     }
-                }*/
+                }
             }
         }
         return sum;
@@ -124,10 +130,10 @@ class Hand {
         this.svg.setAttribute('width', (this.cards.length - 1) * 30 + 70);
         card.draw(this.svg, (this.cards.length - 1) * 30 + 0, 0);
         this.scoreText.innerHTML = `${this.score}`;
-        if (this.holder.name != "Dealer") {
-            if (this.score > 21) {
-                alert("Bust!")
-            }
+        if (this.holder.name != "Dealer" && this.score.length == 0) {
+            this.holder.money -= this.holder.bet;
+            this.holder.update();
+            this.buttons.setAttribute('style', 'display: none');
         }
     }
     stand() {
@@ -138,23 +144,19 @@ class Hand {
         while (dealer.hands[0].score[dealer.hands[0].score.length - 1] < 17) {
             dealer.hands[0].hit();
         }
-        if (dealer.hands[0].score > 21 || this.score > dealer.hands[0].score) {
-            alert("You win :)")
-            start();
-            this.holder.money += 100;
-            this.holder.update();
+        if (this.score.length == 0 || this.score[this.score.length - 1] < dealer.hands[0].score[dealer.hands[0].score.length - 1]) {
+            this.holder.money -= this.holder.bet;
         }
-        else if (this.score < dealer.hands[0].score) {
-            alert("You lose :(")
-            this.holder.money -= 100;
-            this.holder.update();
+        else if (dealer.hands[0].score.length == 0 || this.score[this.score.length - 1] > dealer.hands[0].score[dealer.hands[0].score.length - 1]) {
+            this.holder.money += this.holder.bet;
         }
-        else {
-            alert("Draw :|")
-        }
+        this.holder.update();
+        this.buttons.setAttribute('style', 'display: none');
     }
     double() {
-        // do nothing
+        this.bet = 200;
+        this.hit();
+        this.stand();
     }
     split() {
         if (this.cards.length == 2 && this.cards[0].points == this.cards[1].points) {
@@ -292,15 +294,18 @@ function start() {
         game.removeChild(game.firstChild);
     }
     player.hands = [];
-    player.update
     dealer.hands = [];
 
     deck = Deck.shuffle(Deck.createDeck());
 
-    let hand = new Hand(dealer);;
+    game.appendChild(dealer.heading);
+
+    let hand = new Hand(dealer);
     hand.hit();
     hand.hit();
     dealer.hands.push(hand)
+
+    game.appendChild(player.heading);
     
     hand = new Hand(player);
     hand.hit();
@@ -310,7 +315,9 @@ function start() {
     // Check for blackjack on deal
     
     if (player.hands[0].score.includes(21)) {
-        alert("Blackjack!")
+        player.money += player.bet;
+        player.update();
+        player.hands[0].buttons.setAttribute('style', 'display: none');
     }
 }
 
