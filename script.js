@@ -40,7 +40,6 @@ class Hand {
 
         game.appendChild(this.div);
 
-
         let linebreak = document.createElement("br");
         game.appendChild(linebreak);
 
@@ -134,36 +133,45 @@ class Hand {
             document.getElementById("status").innerHTML = "Bust!";
             this.holder.update();
             this.buttons.setAttribute('style', 'display: none');
+            document.getElementById("restartButton").setAttribute('style', 'display: inline-block');
         }
     }
     stand() {
         dealer.hands[0].cards[0].flip();
         dealer.hands[0].scoreText.innerHTML = `${dealer.hands[0].score}`;
         dealer.hands[0].draw();
-        // While dealer's highest score is less than 17, hit
-        while (dealer.hands[0].score[dealer.hands[0].score.length - 1] < 17) {
-            dealer.hands[0].hit();
-        }
-        if (this.score.length == 0 || this.score[this.score.length - 1] < dealer.hands[0].score[dealer.hands[0].score.length - 1]) {
-            this.holder.money -= this.holder.bet;
-            document.getElementById("status").setAttribute('style', 'color: red');
-            document.getElementById("status").innerHTML = "You lose!";
-        }
-        else if (dealer.hands[0].score.length == 0 || this.score[this.score.length - 1] > dealer.hands[0].score[dealer.hands[0].score.length - 1]) {
-            this.holder.money += this.holder.bet;
-            document.getElementById("status").setAttribute('style', 'color: lime');
-            document.getElementById("status").innerHTML = "You win!";
-        }
-        else {
-            document.getElementById("status").innerHTML = "Draw!";
-        }
-        this.holder.update();
         this.buttons.setAttribute('style', 'display: none');
+        // While dealer's highest score is less than 17, hit
+        var interval = setInterval(() => {
+            if (dealer.hands[0].score[dealer.hands[0].score.length - 1] >= 17 || dealer.hands[0].score.length == 0) {
+                clearInterval(interval);
+                if (this.score.length == 0 || this.score[this.score.length - 1] < dealer.hands[0].score[dealer.hands[0].score.length - 1]) {
+                    this.holder.money -= this.holder.bet;
+                    document.getElementById("status").setAttribute('style', 'color: red');
+                    document.getElementById("status").innerHTML = "You lose!";
+                }
+                else if (dealer.hands[0].score.length == 0 || this.score[this.score.length - 1] > dealer.hands[0].score[dealer.hands[0].score.length - 1]) {
+                    this.holder.money += this.holder.bet;
+                    document.getElementById("status").setAttribute('style', 'color: lime');
+                    document.getElementById("status").innerHTML = "You win!";
+                }
+                else {
+                    document.getElementById("status").innerHTML = "Draw!";
+                }
+                this.holder.update();
+                document.getElementById("restartButton").setAttribute('style', 'display: inline-block');
+            }
+            else {
+                dealer.hands[0].hit();
+            }
+        }, 1000);
     }
     double() {
-        this.bet = 200;
+        this.holder.bet = 200;
         this.hit();
-        this.stand();
+        if (this.score[this.score.length - 1] <= 21) {
+            this.stand();
+        }
     }
     split() {
         if (this.cards.length == 2 && this.cards[0].points == this.cards[1].points) {
@@ -175,9 +183,13 @@ class Hand {
         }
     }
     surrender() {
-        // do nothing
+        this.holder.bet = this.holder.bet / 2;
+        this.holder.money -= this.holder.bet;
+        document.getElementById("status").setAttribute('style', 'color: red');
+        document.getElementById("status").innerHTML = "You lose!";
+        this.holder.update();
+        this.buttons.setAttribute('style', 'display: none');
     }
-
 }
 
 class Deck {
@@ -297,14 +309,20 @@ class Card {
 }
 
 function start() {
+
+    document.getElementById("betInput").setAttribute("disabled", "disabled");
     while (game.firstChild) {
         game.removeChild(game.firstChild);
     }
     player.hands = [];
     dealer.hands = [];
 
+    document.getElementById("restartButton").innerHTML = "Restart";
+    document.getElementById("restartButton").setAttribute('style', 'display: none');
     document.getElementById("status").setAttribute('style', 'color: white');
     document.getElementById("status").innerHTML = "";
+
+    player.bet = 100;
 
     deck = Deck.shuffle(Deck.createDeck());
 
@@ -321,6 +339,7 @@ function start() {
     hand.hit();
     hand.hit();
     player.hands.push(hand)
+    hand.buttons.setAttribute('style', 'display: inline-block')
     
     // Check for blackjack on deal
     
@@ -337,5 +356,3 @@ var game = document.getElementById("game");
 var deck;
 var dealer = new Player("Dealer");
 var player = new Player("Alex");
-
-start();

@@ -34,6 +34,17 @@ button:hover {
     background-color: #484;
 }
 
+input {
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    margin: 8px 4px;
+    filter: drop-shadow(0px 0px 2px rgb(0 0 0 / 0.4));
+    width: 50px;
+}
+
 svg, p.scoreText {
     display: inline-block;
 }

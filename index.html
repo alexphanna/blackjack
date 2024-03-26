@@ -9,7 +9,9 @@
     <h1>Blackjack</h1>
     <h2 id="status"></h2>
     <div id="game"></div>
-    <button onclick=start()>Restart</button>
-    <script src="script.js"></script>
+    <input id="betInput" type="number" min="1" value="100"/>
+    <label for="bet">Chips</label>
+    <button id="restartButton" onclick=start()>Start</button>
+    <script src="script.js" id="bet"></script>
 </body>
 </html>
