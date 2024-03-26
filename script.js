@@ -1,4 +1,11 @@
+/**
+ * Represents a player in the blackjack game.
+ */
 class Player {
+    /**
+     * Creates a new player with the specified name.
+     * @param {string} name - The name of the player.
+     */
     constructor(name) {
         this.name = name;
         this.money = 1000;
@@ -6,23 +13,41 @@ class Player {
         this.hands = [];
 
         this.heading = document.createElement("h3");
-        this.update();
+        this.displayScore();
     }
+
+    /**
+     * Draws the player's hands.
+     */
     draw() {
         for (let hand of this.hands) {
-            hand.draw()
+            hand.draw();
         }
     }
-    update() {
+
+    /**
+     * Displays the player's score.
+     */
+    displayScore() {
         if (this.name == "Dealer") {
             this.heading.innerHTML = `${this.name}`;
-        }
-        else {
+        } else {
             this.heading.innerHTML = `${this.name}: ${this.money}`;
         }
     }
 }
+
+/**
+ * Represents a hand of cards.
+ * @class
+ */
 class Hand {
+    /**
+     * Represents a hand of cards.
+     * @constructor
+     * @param {string} holder - The name of the holder of the hand.
+     * @param {Array} [cards=[]] - An array of cards in the hand.
+     */
     constructor(holder, cards = []) {
         this.holder = holder
         this.cards = cards;
@@ -48,40 +73,29 @@ class Hand {
             this.buttons.setAttribute('style', 'display: inline-block');
             game.appendChild(this.buttons);
 
-            this.hitButton = document.createElement("button");
-            this.hitButton.onclick = () => this.hit();
-            this.hitButton.innerHTML = "Hit";
-            this.buttons.appendChild(this.hitButton);
-    
-            this.standButton = document.createElement("button");
-            this.standButton.onclick = () => this.stand();
-            this.standButton.innerHTML = "Stand";
-            this.buttons.appendChild(this.standButton);
-    
-            this.splitButton = document.createElement("button");
-            this.splitButton.onclick = () => this.split();
-            this.splitButton.innerHTML = "Split";
-            this.buttons.appendChild(this.splitButton);
-    
-            this.doubleButton = document.createElement("button");
-            this.doubleButton.onclick = () => this.double();
-            this.doubleButton.innerHTML = "Double";
-            this.buttons.appendChild(this.doubleButton);
-    
-            this.surrenderButton = document.createElement("button");
-            this.surrenderButton.onclick = () => this.surrender();
-            this.surrenderButton.innerHTML = "Surrender";
-            this.buttons.appendChild(this.surrenderButton);
+            const buttonNames = ["Hit", "Stand", "Split", "Double", "Surrender"];
+            const buttonFunctions = [this.hit, this.stand, this.split, this.double, this.surrender];
+
+            for (let i = 0; i < buttonNames.length; i++) {
+                const button = document.createElement("button");
+                button.onclick = buttonFunctions[i].bind(this);
+                button.innerHTML = buttonNames[i];
+                this.buttons.appendChild(button);
+            }
 
             game.appendChild(this.buttons);
     
             linebreak = document.createElement("br");
-            this.buttons.appendChild(linebreak);
+            game.appendChild(linebreak);
         }
     }
     
+    /**
+     * Calculates the score of the player's hand.
+     * @returns {number[]} An array of possible scores.
+     */
     get score() {
-        var sum = [0];
+        let sum = [0];
         for (let card of this.cards) {
             if (card.faceUp) {
                 if (card.value == 1) {
@@ -107,8 +121,11 @@ class Hand {
         }
         return sum;
     }
+
+    /**
+     * Draws the cards on the SVG element and updates the score text.
+     */
     draw() {
-        // remove all children from an element
         while (this.svg.firstChild) {
             this.svg.removeChild(this.svg.firstChild);
         }
@@ -118,6 +135,10 @@ class Hand {
         }
         this.scoreText.innerHTML = `${this.score}`;
     }
+
+    /**
+     * Deals a new card to the player or dealer and updates the game state.
+     */
     hit() {
         let card = deck.pop();
         if (this.holder.name == "Dealer" && this.cards.length == 0) {
@@ -127,52 +148,60 @@ class Hand {
         this.svg.setAttribute('width', (this.cards.length - 1) * 30 + 70);
         card.draw(this.svg, (this.cards.length - 1) * 30 + 0, 0);
         this.scoreText.innerHTML = `${this.score}`;
-        if (this.holder.name != "Dealer" && this.score.length == 0) {
-            this.holder.money -= this.holder.bet;
-            document.getElementById("status").setAttribute('style', 'color: red');
-            document.getElementById("status").innerHTML = "Bust!";
-            this.holder.update();
-            this.buttons.setAttribute('style', 'display: none');
-            document.getElementById("restartButton").setAttribute('style', 'display: inline-block');
+        if (this.holder.name != "Dealer") {
+            if (this.score.length == 0) {
+                this.holder.money -= this.holder.bet;
+                this.displayMessage("Busted", "red");
+            }
+            else if (this.score[this.score.length - 1] == 21) {
+                this.stand();
+            }
         }
     }
+
+    /**
+     * Makes the player stand and triggers the dealer's turn.
+     */
     stand() {
-        dealer.hands[0].cards[0].flip();
-        dealer.hands[0].scoreText.innerHTML = `${dealer.hands[0].score}`;
-        dealer.hands[0].draw();
+        this.reveal();
         this.buttons.setAttribute('style', 'display: none');
-        // While dealer's highest score is less than 17, hit
-        var interval = setInterval(() => {
-            if (dealer.hands[0].score[dealer.hands[0].score.length - 1] >= 17 || dealer.hands[0].score.length == 0) {
-                clearInterval(interval);
-                if (this.score.length == 0 || this.score[this.score.length - 1] < dealer.hands[0].score[dealer.hands[0].score.length - 1]) {
-                    this.holder.money -= this.holder.bet;
-                    document.getElementById("status").setAttribute('style', 'color: red');
-                    document.getElementById("status").innerHTML = "You lose!";
+        var dealerTurnInterval = setInterval(() => {
+            const dealerScore = dealer.hands[0].score;
+            if (dealerScore[dealerScore.length - 1] >= 17 || dealerScore.length == 0) {
+                clearInterval(dealerTurnInterval);
+                const score = this.score;
+                if (score.length == 0 || score[score.length - 1] < dealerScore[dealerScore.length - 1]) {
+                    this.holder.money = this.holder.money - this.holder.bet;
+                    this.displayMessage("You lose!", "red");
                 }
-                else if (dealer.hands[0].score.length == 0 || this.score[this.score.length - 1] > dealer.hands[0].score[dealer.hands[0].score.length - 1]) {
-                    this.holder.money += this.holder.bet;
-                    document.getElementById("status").setAttribute('style', 'color: lime');
-                    document.getElementById("status").innerHTML = "You win!";
+                else if (dealerScore.length == 0 || score[score.length - 1] > dealerScore[dealerScore.length - 1]) {
+                    this.holder.money = this.holder.money + this.holder.bet;
+                    this.displayMessage("You win!", "lime");
                 }
                 else {
-                    document.getElementById("status").innerHTML = "Draw!";
+                    this.displayMessage("Push", "yellow");
                 }
-                this.holder.update();
-                document.getElementById("restartButton").setAttribute('style', 'display: inline-block');
             }
             else {
                 dealer.hands[0].hit();
             }
         }, 1000);
     }
+
+    /**
+     * Doubles the bet, hits a card, and stands if the score is less than or equal to 21.
+     */
     double() {
-        this.holder.bet = 200;
+        this.holder.bet *= 2;
         this.hit();
         if (this.score[this.score.length - 1] <= 21) {
             this.stand();
         }
     }
+
+    /**
+     * Splits the hand into two separate hands if the conditions are met.
+     */
     split() {
         if (this.cards.length == 2 && this.cards[0].points == this.cards[1].points) {
             var newHand = new Hand(this.holder);
@@ -180,20 +209,55 @@ class Hand {
             newHand.cards.push(this.cards.pop());
             this.draw();
             newHand.draw();
+            this.hit();
+            newHand.hit();
         }
     }
+    
+    /**
+     * Surrenders the current hand, revealing the cards, deducting half of the bet amount from the player's money,
+     * displaying the player's score, and showing a surrender message in yellow color.
+     */
     surrender() {
-        this.holder.bet = this.holder.bet / 2;
-        this.holder.money -= this.holder.bet;
-        document.getElementById("status").setAttribute('style', 'color: red');
-        document.getElementById("status").innerHTML = "You lose!";
-        this.holder.update();
+        this.reveal();
+        this.holder.money -= this.holder.bet / 2;
+        this.holder.displayScore();
+        this.displayMessage("Surrendered", "yellow");
+    }
+    
+    /**
+     * Reveals the first card of the dealer's hand, updates the score text, and draws the hand.
+     */
+    reveal() {
+        const dealerHand = dealer.hands[0];
+        dealerHand.cards[0].flip();
+        dealerHand.scoreText.innerHTML = `${dealerHand.score}`;
+        dealerHand.draw();
+    }
+
+    /**
+     * Displays a message on the screen with the specified color.
+     *
+     * @param {string} message - The message to be displayed.
+     * @param {string} color - The color of the message.
+     */
+    displayMessage(message, color) {
+        document.getElementById("status").setAttribute('style', `color: ${color}`);
+        document.getElementById("status").innerHTML = message;
         this.buttons.setAttribute('style', 'display: none');
+        document.getElementById("restartButton").setAttribute('style', 'display: inline-block');
+        document.getElementById("betInput").removeAttribute("disabled");
     }
 }
 
+/**
+ * Represents a deck of cards.
+ */
 class Deck {
-    // Create an unshuffled deck of cards
+    /**
+     * Creates a deck of cards.
+     * @returns {Array} An array of Card objects representing a deck of cards.
+     */
     static createDeck() {
         var cards = [];
         for (let suit = 0; suit < 4; suit++) {
@@ -203,7 +267,12 @@ class Deck {
         }
         return cards;
     }
-    // Shuffle the deck
+    
+    /**
+     * Shuffles an array of cards using the Fisher-Yates algorithm.
+     * @param {Array} oldCards - The array of cards to be shuffled.
+     * @returns {Array} - The shuffled array of cards.
+     */
     static shuffle(oldCards) {
         var newCards = [...oldCards];
         for (let i = 0; i < oldCards.length; i++) {
@@ -217,7 +286,18 @@ class Deck {
     }
 }
 
+/**
+ * Represents a playing card.
+ * @class
+ */
 class Card {
+    /**
+     * Represents a card in a deck.
+     * @constructor
+     * @param {string} suit - The suit of the card.
+     * @param {number} value - The value of the card.
+     * @param {boolean} [faceUp=true] - Whether the card is face up or face down.
+     */
     constructor(suit, value, faceUp = true) {
         this.suit = suit;
         this.value = value;
@@ -233,6 +313,11 @@ class Card {
         }
         this.faceUp = faceUp;
     }
+
+    /**
+     * Returns the rank of the card.
+     * @returns {string|number} The rank of the card. If the value is 1, 11, 12, or 13, it returns "A", "J", "Q", or "K" respectively. Otherwise, it returns the numeric value.
+     */
     get rank() {
         switch(this.value) {
             case 1:
@@ -247,6 +332,12 @@ class Card {
                 return this.value
         }
     }
+
+    /**
+     * Get the symbol representation of the card's suit.
+     *
+     * @returns {string} The symbol representation of the card's suit.
+     */
     get symbol() {
         switch(this.suit) {
             case 0:
@@ -259,13 +350,22 @@ class Card {
                 return "♦";
         }
     }
-    // Flip the card
+    
+    /**
+     * Flips the card, changing its faceUp property.
+     */
     flip() {
         this.faceUp = !this.faceUp;
     }
 
+    /**
+     * Draws a playing card on the SVG canvas.
+     * @param {SVGSVGElement} svg - The SVG element to draw on.
+     * @param {number} x - The x-coordinate of the top-left corner of the card.
+     * @param {number} y - The y-coordinate of the top-left corner of the card.
+     */
     draw(svg, x, y) {
-        var rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
         rect.setAttribute('width', '50');
         rect.setAttribute('height', '70');
         rect.setAttribute('x', x + 10);
@@ -276,53 +376,54 @@ class Card {
         svg.appendChild(rect);
 
         if (this.faceUp) {
-            var color = this.suit % 2 == 0 ? "black" : "red";
-        
-            var text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-            text.setAttribute('dominant-baseline', 'hanging');
-            text.setAttribute('x', x + 15);
-            text.setAttribute('y', y + 15);
-            text.setAttribute('fill', color);
-            text.innerHTML = this.rank;
-            svg.appendChild(text);
-        
-            text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-            text.setAttribute('x', x + 15);
-            text.setAttribute('y', y + 45);
-            text.setAttribute('fill', color);
-            text.innerHTML = this.symbol;
-            svg.appendChild(text);
-        }
-        else {
-            rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-            rect.setAttribute('width', '48');
-            rect.setAttribute('height', '68');
-            rect.setAttribute('x', x + 11);
-            rect.setAttribute('y', y + 11);
-            rect.setAttribute('rx', '5');
-            rect.setAttribute('ry', '5');
-            rect.setAttribute('fill', 'darkblue');
-            rect.setAttribute('filter', 'none');
-            svg.appendChild(rect);
+            const color = this.suit % 2 === 0 ? "black" : "red";
+
+            const textRank = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            textRank.setAttribute('dominant-baseline', 'hanging');
+            textRank.setAttribute('x', x + 15);
+            textRank.setAttribute('y', y + 15);
+            textRank.setAttribute('fill', color);
+            textRank.innerHTML = this.rank;
+            svg.appendChild(textRank);
+
+            const textSymbol = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            textSymbol.setAttribute('x', x + 15);
+            textSymbol.setAttribute('y', y + 45);
+            textSymbol.setAttribute('fill', color);
+            textSymbol.innerHTML = this.symbol;
+            svg.appendChild(textSymbol);
+        } else {
+            const rectBack = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            rectBack.setAttribute('width', '48');
+            rectBack.setAttribute('height', '68');
+            rectBack.setAttribute('x', x + 11);
+            rectBack.setAttribute('y', y + 11);
+            rectBack.setAttribute('rx', '5');
+            rectBack.setAttribute('ry', '5');
+            rectBack.setAttribute('fill', 'darkblue');
+            rectBack.setAttribute('filter', 'none');
+            svg.appendChild(rectBack);
         }
     }
 }
 
+/**
+ * Starts the game by initializing the game state and dealing cards to the player and dealer.
+ */
 function start() {
-
-    document.getElementById("betInput").setAttribute("disabled", "disabled");
     while (game.firstChild) {
         game.removeChild(game.firstChild);
     }
     player.hands = [];
     dealer.hands = [];
 
+    document.getElementById("betInput").setAttribute("disabled", "disabled");
     document.getElementById("restartButton").innerHTML = "Restart";
     document.getElementById("restartButton").setAttribute('style', 'display: none');
     document.getElementById("status").setAttribute('style', 'color: white');
     document.getElementById("status").innerHTML = "";
 
-    player.bet = 100;
+    player.bet = Number(document.getElementById("betInput").value);
 
     deck = Deck.shuffle(Deck.createDeck());
 
@@ -339,20 +440,17 @@ function start() {
     hand.hit();
     hand.hit();
     player.hands.push(hand)
+
     hand.buttons.setAttribute('style', 'display: inline-block')
     
-    // Check for blackjack on deal
-    
     if (player.hands[0].score.includes(21)) {
-        player.money += player.bet;
-        document.getElementById("status").setAttribute('style', 'color: lime');
-        document.getElementById("status").innerHTML = "Blackjack";
-        player.update();
-        player.hands[0].buttons.setAttribute('style', 'display: none');
+        player.money += player.bet * 3 / 2;
+        player.displayScore();
+        player.hands[0].displayMessage("Blackjack", "lime");
     }
 }
 
 var game = document.getElementById("game");
 var deck;
 var dealer = new Player("Dealer");
-var player = new Player("Alex");
+var player = new Player("Player");
