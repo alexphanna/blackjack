@@ -27,17 +27,15 @@ class Hand {
         this.holder = holder
         this.cards = cards;
 
-        this.div = document.createElement("div");
+        this.div = document.createElement("hand");
 
         this.svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         this.svg.setAttribute('width', this.cards.length * 30 + 70);
         this.svg.setAttribute('height', '90');
-        this.svg.setAttribute('style', 'display: inline-block');
         this.div.appendChild(this.svg);
 
         this.scoreText = document.createElement("p");
         this.scoreText.innerHTML = `${this.score}`;
-        this.scoreText.setAttribute('style', 'display: inline-block');
         this.div.appendChild(this.scoreText);
 
         game.appendChild(this.div);
@@ -132,6 +130,8 @@ class Hand {
         this.scoreText.innerHTML = `${this.score}`;
         if (this.holder.name != "Dealer" && this.score.length == 0) {
             this.holder.money -= this.holder.bet;
+            document.getElementById("status").setAttribute('style', 'color: red');
+            document.getElementById("status").innerHTML = "Bust!";
             this.holder.update();
             this.buttons.setAttribute('style', 'display: none');
         }
@@ -146,9 +146,16 @@ class Hand {
         }
         if (this.score.length == 0 || this.score[this.score.length - 1] < dealer.hands[0].score[dealer.hands[0].score.length - 1]) {
             this.holder.money -= this.holder.bet;
+            document.getElementById("status").setAttribute('style', 'color: red');
+            document.getElementById("status").innerHTML = "You lose!";
         }
         else if (dealer.hands[0].score.length == 0 || this.score[this.score.length - 1] > dealer.hands[0].score[dealer.hands[0].score.length - 1]) {
             this.holder.money += this.holder.bet;
+            document.getElementById("status").setAttribute('style', 'color: lime');
+            document.getElementById("status").innerHTML = "You win!";
+        }
+        else {
+            document.getElementById("status").innerHTML = "Draw!";
         }
         this.holder.update();
         this.buttons.setAttribute('style', 'display: none');
@@ -296,6 +303,9 @@ function start() {
     player.hands = [];
     dealer.hands = [];
 
+    document.getElementById("status").setAttribute('style', 'color: white');
+    document.getElementById("status").innerHTML = "";
+
     deck = Deck.shuffle(Deck.createDeck());
 
     game.appendChild(dealer.heading);
@@ -316,6 +326,8 @@ function start() {
     
     if (player.hands[0].score.includes(21)) {
         player.money += player.bet;
+        document.getElementById("status").setAttribute('style', 'color: lime');
+        document.getElementById("status").innerHTML = "Blackjack";
         player.update();
         player.hands[0].buttons.setAttribute('style', 'display: none');
     }

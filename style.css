@@ -33,3 +33,7 @@ button {
 button:hover {
     background-color: #484;
 }
+
+svg, p.scoreText {
+    display: inline-block;
+}
