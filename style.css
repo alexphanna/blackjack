@@ -5,46 +5,44 @@ html {
     font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Card */
 rect {
     filter: drop-shadow(0px 0px 2px rgb(0 0 0 / 0.4));
 }
 
+/* Card Text */
 text {
     font-family: 'Courier New', Courier, monospace;
     font-size: 20px;
 }
 
-h1 {
-    color: #282
+svg, p.scoreText {
+    display: inline-block;
 }
 
-button {
+button, input {
     border: none;
-    color: white;
-    background-color: #282;
     border-radius: 5px;
     padding: 10px 20px;
     font-size: 16px;
     cursor: pointer;
     margin: 8px 4px;
     filter: drop-shadow(0px 0px 2px rgb(0 0 0 / 0.4));
+}
+
+button {
+    background-color: #282;
+    color: white;
 }
 
 button:hover {
     background-color: #484;
 }
 
-input {
-    border: none;
-    border-radius: 5px;
-    padding: 10px 20px;
-    font-size: 16px;
-    cursor: pointer;
-    margin: 8px 4px;
-    filter: drop-shadow(0px 0px 2px rgb(0 0 0 / 0.4));
-    width: 100px;
+button:active {
+    background-color: #8C8;
 }
 
-svg, p.scoreText {
-    display: inline-block;
+input {
+    width: 100px;
 }

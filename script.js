@@ -1,4 +1,9 @@
 /**
+ * Blackjack in JavaScript
+ * Made for AP Computer Science Principles
+ */
+
+/**
  * Represents a player in the blackjack game.
  */
 class Player {
@@ -13,7 +18,7 @@ class Player {
         this.hands = [];
 
         this.heading = document.createElement("h3");
-        this.displayScore();
+        this.displayMoney();
     }
 
     /**
@@ -26,9 +31,9 @@ class Player {
     }
 
     /**
-     * Displays the player's score.
+     * Displays the player's money.
      */
-    displayScore() {
+    displayMoney() {
         if (this.name == "Dealer") {
             this.heading.innerHTML = `${this.name}`;
         } else {
@@ -51,6 +56,7 @@ class Hand {
     constructor(holder, cards = []) {
         this.holder = holder
         this.cards = cards;
+        this.bet = 100;
 
         this.div = document.createElement("hand");
 
@@ -75,15 +81,29 @@ class Hand {
 
             const buttonNames = ["Hit", "Stand", "Split", "Double", "Surrender"];
             const buttonFunctions = [this.hit, this.stand, this.split, this.double, this.surrender];
+            const buttonTitles = [
+                "Take another card",
+                "Take no more cards",
+                "Create two hands from a starting hand where both cards are the same value. Each new hand gets a second card resulting in two starting hands",
+                "Increase the initial bet by 100% and take exactly one more card",
+                "Forfeit half the bet and end the hand immediately"
+            ]
 
             for (let i = 0; i < buttonNames.length; i++) {
                 const button = document.createElement("button");
+                button.title = buttonTitles[i];
                 button.onclick = buttonFunctions[i].bind(this);
                 button.innerHTML = buttonNames[i];
                 this.buttons.appendChild(button);
             }
 
             game.appendChild(this.buttons);
+    
+            linebreak = document.createElement("br");
+            game.appendChild(linebreak);
+
+            this.betInput = document.createElement("input");
+            game.appendChild(this.betInput);
     
             linebreak = document.createElement("br");
             game.appendChild(linebreak);
@@ -133,7 +153,19 @@ class Hand {
         for (let i = 0; i < this.cards.length; i++) {
             this.cards[i].draw(this.svg, i * 30 + 0, 0);
         }
-        this.scoreText.innerHTML = `${this.score}`;
+        this.updateScore();
+    }
+
+    updateScore() {
+        const score = this.score;
+        if (score.length == 0) {
+            this.scoreText.setAttribute('style', 'color: red');
+            this.scoreText.innerHTML = `> 21`;
+        }
+        else {
+            this.scoreText.setAttribute('style', 'color: white');
+            this.scoreText.innerHTML = `${score}`;
+        }
     }
 
     /**
@@ -147,13 +179,13 @@ class Hand {
         this.cards.push(card);
         this.svg.setAttribute('width', (this.cards.length - 1) * 30 + 70);
         card.draw(this.svg, (this.cards.length - 1) * 30 + 0, 0);
-        this.scoreText.innerHTML = `${this.score}`;
+        this.updateScore();
         if (this.holder.name != "Dealer") {
             if (this.score.length == 0) {
-                this.holder.money -= this.holder.bet;
+                this.holder.money -= this.bet;
                 this.displayMessage("Busted", "red");
             }
-            else if (this.score[this.score.length - 1] == 21) {
+            else if (this.score.length > 2 && this.score[this.score.length - 1] == 21) {
                 this.stand();
             }
         }
@@ -165,25 +197,26 @@ class Hand {
     stand() {
         this.reveal();
         this.buttons.setAttribute('style', 'display: none');
-        var dealerTurnInterval = setInterval(() => {
-            const dealerScore = dealer.hands[0].score;
+        const dealerTurnInterval = setInterval(() => {
+            let dealerScore = dealer.hands[0].score;
+            if (dealerScore[dealerScore.length - 1] < 17 && dealerScore.length > 0) {
+                dealer.hands[0].hit();
+                dealerScore = dealer.hands[0].score;
+            }
             if (dealerScore[dealerScore.length - 1] >= 17 || dealerScore.length == 0) {
                 clearInterval(dealerTurnInterval);
                 const score = this.score;
                 if (score.length == 0 || score[score.length - 1] < dealerScore[dealerScore.length - 1]) {
-                    this.holder.money = this.holder.money - this.holder.bet;
+                    this.holder.money = this.holder.money - this.bet;
                     this.displayMessage("You lose!", "red");
                 }
                 else if (dealerScore.length == 0 || score[score.length - 1] > dealerScore[dealerScore.length - 1]) {
-                    this.holder.money = this.holder.money + this.holder.bet;
+                    this.holder.money = this.holder.money + this.bet;
                     this.displayMessage("You win!", "lime");
                 }
                 else {
                     this.displayMessage("Push", "yellow");
                 }
-            }
-            else {
-                dealer.hands[0].hit();
             }
         }, 1000);
     }
@@ -192,7 +225,7 @@ class Hand {
      * Doubles the bet, hits a card, and stands if the score is less than or equal to 21.
      */
     double() {
-        this.holder.bet *= 2;
+        this.bet *= 2;
         this.hit();
         if (this.score[this.score.length - 1] <= 21) {
             this.stand();
@@ -204,7 +237,7 @@ class Hand {
      */
     split() {
         if (this.cards.length == 2 && this.cards[0].points == this.cards[1].points) {
-            var newHand = new Hand(this.holder);
+            const newHand = new Hand(this.holder);
             this.holder += newHand;
             newHand.cards.push(this.cards.pop());
             this.draw();
@@ -220,8 +253,7 @@ class Hand {
      */
     surrender() {
         this.reveal();
-        this.holder.money -= this.holder.bet / 2;
-        this.holder.displayScore();
+        this.holder.money -= this.bet / 2;
         this.displayMessage("Surrendered", "yellow");
     }
     
@@ -231,7 +263,7 @@ class Hand {
     reveal() {
         const dealerHand = dealer.hands[0];
         dealerHand.cards[0].flip();
-        dealerHand.scoreText.innerHTML = `${dealerHand.score}`;
+        dealerHand.updateScore();
         dealerHand.draw();
     }
 
@@ -242,11 +274,12 @@ class Hand {
      * @param {string} color - The color of the message.
      */
     displayMessage(message, color) {
+        this.holder.displayMoney();
         document.getElementById("status").setAttribute('style', `color: ${color}`);
         document.getElementById("status").innerHTML = message;
         this.buttons.setAttribute('style', 'display: none');
         document.getElementById("restartButton").setAttribute('style', 'display: inline-block');
-        document.getElementById("betInput").removeAttribute("disabled");
+        /*document.getElementById("betInput").removeAttribute("disabled");*/
     }
 }
 
@@ -259,7 +292,7 @@ class Deck {
      * @returns {Array} An array of Card objects representing a deck of cards.
      */
     static createDeck() {
-        var cards = [];
+        let cards = [];
         for (let suit = 0; suit < 4; suit++) {
             for (let value = 1; value <= 13; value++) {
                 cards.push(new Card(suit, value));
@@ -274,9 +307,9 @@ class Deck {
      * @returns {Array} - The shuffled array of cards.
      */
     static shuffle(oldCards) {
-        var newCards = [...oldCards];
+        let newCards = [...oldCards];
         for (let i = 0; i < oldCards.length; i++) {
-            var j = Math.floor(Math.random() * (i + 1));
+            let j = Math.floor(Math.random() * (i + 1));
             if (j != i) {
                 newCards[i] = newCards[j];
             }
@@ -417,13 +450,14 @@ function start() {
     player.hands = [];
     dealer.hands = [];
 
-    document.getElementById("betInput").setAttribute("disabled", "disabled");
+    document.getElementById("money").setAttribute("style", "display: none");
+    /*document.getElementById("betInput").setAttribute("disabled", "disabled");*/
     document.getElementById("restartButton").innerHTML = "Restart";
     document.getElementById("restartButton").setAttribute('style', 'display: none');
     document.getElementById("status").setAttribute('style', 'color: white');
     document.getElementById("status").innerHTML = "";
 
-    player.bet = Number(document.getElementById("betInput").value);
+    /*player.hands[0].bet = Number(player.hands[0].bet);*/
 
     deck = Deck.shuffle(Deck.createDeck());
 
@@ -444,13 +478,12 @@ function start() {
     hand.buttons.setAttribute('style', 'display: inline-block')
     
     if (player.hands[0].score.includes(21)) {
-        player.money += player.bet * 3 / 2;
-        player.displayScore();
+        player.money += player.hands[0].bet * 3 / 2;
         player.hands[0].displayMessage("Blackjack", "lime");
     }
 }
 
-var game = document.getElementById("game");
-var deck;
-var dealer = new Player("Dealer");
-var player = new Player("Player");
+let game = document.getElementById("game");
+let deck;
+let dealer = new Player("Dealer");
+let player = new Player("Player");
