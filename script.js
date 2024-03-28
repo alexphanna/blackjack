@@ -58,55 +58,14 @@ class Hand {
         this.cards = cards;
         this.bet = 100;
 
-        this.div = document.createElement("hand");
-
-        this.svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        this.svg.setAttribute('width', this.cards.length * 30 + 70);
-        this.svg.setAttribute('height', '90');
-        this.div.appendChild(this.svg);
-
-        this.scoreText = document.createElement("p");
-        this.scoreText.innerHTML = `${this.score}`;
-        this.div.appendChild(this.scoreText);
-
-        game.appendChild(this.div);
-
-        let linebreak = document.createElement("br");
-        game.appendChild(linebreak);
-
         if (this.holder.name != "Dealer") {
-            this.buttons = document.createElement("div");
-            this.buttons.setAttribute('style', 'display: inline-block');
-            game.appendChild(this.buttons);
-
-            const buttonNames = ["Hit", "Stand", "Split", "Double", "Surrender"];
-            const buttonFunctions = [this.hit, this.stand, this.split, this.double, this.surrender];
-            const buttonTitles = [
-                "Take another card",
-                "Take no more cards",
-                "Create two hands from a starting hand where both cards are the same value. Each new hand gets a second card resulting in two starting hands",
-                "Increase the initial bet by 100% and take exactly one more card",
-                "Forfeit half the bet and end the hand immediately"
-            ]
-
-            for (let i = 0; i < buttonNames.length; i++) {
-                const button = document.createElement("button");
-                button.title = buttonTitles[i];
-                button.onclick = buttonFunctions[i].bind(this);
-                button.innerHTML = buttonNames[i];
-                this.buttons.appendChild(button);
-            }
-
-            game.appendChild(this.buttons);
-    
-            linebreak = document.createElement("br");
-            game.appendChild(linebreak);
-
             this.betInput = document.createElement("input");
             game.appendChild(this.betInput);
     
-            linebreak = document.createElement("br");
-            game.appendChild(linebreak);
+            this.dealButton = document.createElement("button");
+            this.dealButton.innerHTML = "Deal";
+            this.dealButton.onclick = this.deal.bind(this);
+            game.appendChild(this.dealButton);
         }
     }
     
@@ -142,6 +101,65 @@ class Hand {
         return sum;
     }
 
+    deal() {
+        if (this.holder.name != "Dealer" && dealer.hands.length == 0) {
+            this.bet = Number(this.betInput.value);
+            game.removeChild(this.betInput);
+            game.removeChild(this.dealButton);
+            dealer.hands[0].deal();
+        }
+
+        this.handDiv = document.createElement("div");
+
+        this.svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        this.svg.setAttribute('width', this.cards.length * 30 + 70);
+        this.svg.setAttribute('height', '90');
+        this.handDiv.appendChild(this.svg);
+
+        this.scoreText = document.createElement("p");
+        this.scoreText.innerHTML = `${this.score}`;
+        this.handDiv.appendChild(this.scoreText);
+
+        if (this.holder.name != "Dealer") {
+            this.buttons = document.createElement("div");
+            this.buttons.setAttribute('style', 'display: inline-block');
+            this.handDiv.appendChild(this.buttons);
+
+            const buttonNames = ["Hit", "Stand", "Split", "Double", "Surrender"];
+            const buttonFunctions = [this.hit, this.stand, this.split, this.double, this.surrender];
+            const buttonTitles = [
+                "Take another card",
+                "Take no more cards",
+                "Create two hands from a starting hand where both cards are the same value. Each new hand gets a second card resulting in two starting hands",
+                "Increase the initial bet by 100% and take exactly one more card",
+                "Forfeit half the bet and end the hand immediately"
+            ]
+
+            for (let i = 0; i < buttonNames.length; i++) {
+                const button = document.createElement("button");
+                button.title = buttonTitles[i];
+                button.onclick = buttonFunctions[i].bind(this);
+                button.innerHTML = buttonNames[i];
+                this.buttons.appendChild(button);
+            }
+
+            this.handDiv.appendChild(this.buttons);
+    
+            let linebreak = document.createElement("br");
+            this.handDiv.appendChild(linebreak);
+        }
+
+        game.insertBefore(this.handDiv, this.holder.heading.nextSibling);
+
+        if (this.holder.hands.length == 1) {
+            this.hit();
+            this.hit();
+        } 
+        else {
+            this.hit();
+        }
+    }
+
     /**
      * Draws the cards on the SVG element and updates the score text.
      */
@@ -156,6 +174,9 @@ class Hand {
         this.updateScore();
     }
 
+    /**
+     * Updates the score display based on the current score.
+     */
     updateScore() {
         const score = this.score;
         if (score.length == 0) {
@@ -236,7 +257,7 @@ class Hand {
      * Splits the hand into two separate hands if the conditions are met.
      */
     split() {
-        if (this.cards.length == 2 && this.cards[0].points == this.cards[1].points) {
+        if (true || (this.cards.length == 2 && this.cards[0].points == this.cards[1].points)) {
             const newHand = new Hand(this.holder);
             this.holder += newHand;
             newHand.cards.push(this.cards.pop());
@@ -449,33 +470,23 @@ function start() {
     }
     player.hands = [];
     dealer.hands = [];
-
-    document.getElementById("money").setAttribute("style", "display: none");
-    /*document.getElementById("betInput").setAttribute("disabled", "disabled");*/
+    
     document.getElementById("restartButton").innerHTML = "Restart";
     document.getElementById("restartButton").setAttribute('style', 'display: none');
     document.getElementById("status").setAttribute('style', 'color: white');
     document.getElementById("status").innerHTML = "";
-
-    /*player.hands[0].bet = Number(player.hands[0].bet);*/
 
     deck = Deck.shuffle(Deck.createDeck());
 
     game.appendChild(dealer.heading);
 
     let hand = new Hand(dealer);
-    hand.hit();
-    hand.hit();
     dealer.hands.push(hand)
 
     game.appendChild(player.heading);
     
     hand = new Hand(player);
-    hand.hit();
-    hand.hit();
     player.hands.push(hand)
-
-    hand.buttons.setAttribute('style', 'display: inline-block')
     
     if (player.hands[0].score.includes(21)) {
         player.money += player.hands[0].bet * 3 / 2;
