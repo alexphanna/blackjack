@@ -2,15 +2,7 @@
  * Blackjack in JavaScript
  * Made for AP Computer Science Principles
  */
-
-/**
- * Represents a player in the blackjack game.
- */
 class Player {
-    /**
-     * Creates a new player with the specified name.
-     * @param {string} name - The name of the player.
-     */
     constructor(name) {
         this.name = name;
         this.money = 1000;
@@ -20,19 +12,13 @@ class Player {
         this.heading = document.createElement("h3");
         this.displayMoney();
     }
-
-    /**
-     * Draws the player's hands.
-     */
+    
     draw() {
         for (let hand of this.hands) {
             hand.draw();
         }
     }
-
-    /**
-     * Displays the player's money.
-     */
+    
     displayMoney() {
         if (this.name == "Dealer") {
             this.heading.innerHTML = `${this.name}`;
@@ -42,17 +28,7 @@ class Player {
     }
 }
 
-/**
- * Represents a hand of cards.
- * @class
- */
 class Hand {
-    /**
-     * Represents a hand of cards.
-     * @constructor
-     * @param {string} holder - The name of the holder of the hand.
-     * @param {Array} [cards=[]] - An array of cards in the hand.
-     */
     constructor(holder, cards = []) {
         this.holder = holder
         this.cards = cards;
@@ -69,10 +45,6 @@ class Hand {
         }
     }
     
-    /**
-     * Calculates the score of the player's hand.
-     * @returns {number[]} An array of possible scores.
-     */
     get score() {
         let sum = [0];
         for (let card of this.cards) {
@@ -102,11 +74,13 @@ class Hand {
     }
 
     deal() {
-        if (this.holder.name != "Dealer" && dealer.hands.length == 0) {
+        if (this.holder.name != "Dealer") {
             this.bet = Number(this.betInput.value);
             game.removeChild(this.betInput);
             game.removeChild(this.dealButton);
-            dealer.hands[0].deal();
+            if (dealer.hands[0].cards.length == 0) {
+                dealer.hands[0].deal();
+            }
         }
 
         this.handDiv = document.createElement("div");
@@ -151,18 +125,17 @@ class Hand {
 
         game.insertBefore(this.handDiv, this.holder.heading.nextSibling);
 
-        if (this.holder.hands.length == 1) {
+        if (this.cards.length == 0) {
             this.hit();
-            this.hit();
-        } 
-        else {
             this.hit();
         }
+        else if (this.cards.length == 1) {
+            this.hit();
+            this.holder.hands[this.holder.hands.length - 2].hit();
+        }
+        this.holder.draw();
     }
-
-    /**
-     * Draws the cards on the SVG element and updates the score text.
-     */
+    
     draw() {
         while (this.svg.firstChild) {
             this.svg.removeChild(this.svg.firstChild);
@@ -173,10 +146,7 @@ class Hand {
         }
         this.updateScore();
     }
-
-    /**
-     * Updates the score display based on the current score.
-     */
+    
     updateScore() {
         const score = this.score;
         if (score.length == 0) {
@@ -188,10 +158,7 @@ class Hand {
             this.scoreText.innerHTML = `${score}`;
         }
     }
-
-    /**
-     * Deals a new card to the player or dealer and updates the game state.
-     */
+    
     hit() {
         let card = deck.pop();
         if (this.holder.name == "Dealer" && this.cards.length == 0) {
@@ -211,10 +178,7 @@ class Hand {
             }
         }
     }
-
-    /**
-     * Makes the player stand and triggers the dealer's turn.
-     */
+    
     stand() {
         this.reveal();
         this.buttons.setAttribute('style', 'display: none');
@@ -241,10 +205,7 @@ class Hand {
             }
         }, 1000);
     }
-
-    /**
-     * Doubles the bet, hits a card, and stands if the score is less than or equal to 21.
-     */
+    
     double() {
         this.bet *= 2;
         this.hit();
@@ -252,66 +213,40 @@ class Hand {
             this.stand();
         }
     }
-
-    /**
-     * Splits the hand into two separate hands if the conditions are met.
-     */
+    
     split() {
         if (true || (this.cards.length == 2 && this.cards[0].points == this.cards[1].points)) {
             const newHand = new Hand(this.holder);
-            this.holder += newHand;
             newHand.cards.push(this.cards.pop());
-            this.draw();
-            newHand.draw();
-            this.hit();
-            newHand.hit();
+            this.holder.hands.push(newHand);
         }
     }
     
-    /**
-     * Surrenders the current hand, revealing the cards, deducting half of the bet amount from the player's money,
-     * displaying the player's score, and showing a surrender message in yellow color.
-     */
     surrender() {
         this.reveal();
         this.holder.money -= this.bet / 2;
         this.displayMessage("Surrendered", "yellow");
     }
     
-    /**
-     * Reveals the first card of the dealer's hand, updates the score text, and draws the hand.
-     */
     reveal() {
         const dealerHand = dealer.hands[0];
-        dealerHand.cards[0].flip();
+        if (!dealerHand.cards[0].faceUp) {
+            dealerHand.cards[0].flip();
+        }
         dealerHand.updateScore();
         dealerHand.draw();
     }
-
-    /**
-     * Displays a message on the screen with the specified color.
-     *
-     * @param {string} message - The message to be displayed.
-     * @param {string} color - The color of the message.
-     */
+    
     displayMessage(message, color) {
         this.holder.displayMoney();
         document.getElementById("status").setAttribute('style', `color: ${color}`);
         document.getElementById("status").innerHTML = message;
         this.buttons.setAttribute('style', 'display: none');
         document.getElementById("restartButton").setAttribute('style', 'display: inline-block');
-        /*document.getElementById("betInput").removeAttribute("disabled");*/
     }
 }
 
-/**
- * Represents a deck of cards.
- */
 class Deck {
-    /**
-     * Creates a deck of cards.
-     * @returns {Array} An array of Card objects representing a deck of cards.
-     */
     static createDeck() {
         let cards = [];
         for (let suit = 0; suit < 4; suit++) {
@@ -322,11 +257,6 @@ class Deck {
         return cards;
     }
     
-    /**
-     * Shuffles an array of cards using the Fisher-Yates algorithm.
-     * @param {Array} oldCards - The array of cards to be shuffled.
-     * @returns {Array} - The shuffled array of cards.
-     */
     static shuffle(oldCards) {
         let newCards = [...oldCards];
         for (let i = 0; i < oldCards.length; i++) {
@@ -340,18 +270,7 @@ class Deck {
     }
 }
 
-/**
- * Represents a playing card.
- * @class
- */
 class Card {
-    /**
-     * Represents a card in a deck.
-     * @constructor
-     * @param {string} suit - The suit of the card.
-     * @param {number} value - The value of the card.
-     * @param {boolean} [faceUp=true] - Whether the card is face up or face down.
-     */
     constructor(suit, value, faceUp = true) {
         this.suit = suit;
         this.value = value;
@@ -367,11 +286,7 @@ class Card {
         }
         this.faceUp = faceUp;
     }
-
-    /**
-     * Returns the rank of the card.
-     * @returns {string|number} The rank of the card. If the value is 1, 11, 12, or 13, it returns "A", "J", "Q", or "K" respectively. Otherwise, it returns the numeric value.
-     */
+    
     get rank() {
         switch(this.value) {
             case 1:
@@ -386,12 +301,7 @@ class Card {
                 return this.value
         }
     }
-
-    /**
-     * Get the symbol representation of the card's suit.
-     *
-     * @returns {string} The symbol representation of the card's suit.
-     */
+    
     get symbol() {
         switch(this.suit) {
             case 0:
@@ -405,19 +315,10 @@ class Card {
         }
     }
     
-    /**
-     * Flips the card, changing its faceUp property.
-     */
     flip() {
         this.faceUp = !this.faceUp;
     }
-
-    /**
-     * Draws a playing card on the SVG canvas.
-     * @param {SVGSVGElement} svg - The SVG element to draw on.
-     * @param {number} x - The x-coordinate of the top-left corner of the card.
-     * @param {number} y - The y-coordinate of the top-left corner of the card.
-     */
+    
     draw(svg, x, y) {
         const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
         rect.setAttribute('width', '50');
@@ -461,9 +362,6 @@ class Card {
     }
 }
 
-/**
- * Starts the game by initializing the game state and dealing cards to the player and dealer.
- */
 function start() {
     while (game.firstChild) {
         game.removeChild(game.firstChild);
