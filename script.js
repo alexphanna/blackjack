@@ -23,7 +23,7 @@ class Player {
         if (this.name == "Dealer") {
             this.heading.innerHTML = `${this.name}`;
         } else {
-            this.heading.innerHTML = `${this.name}: ${this.money}`;
+            this.heading.innerHTML = `${this.name}: $${this.money}`;
         }
     }
 }
@@ -83,21 +83,24 @@ class Hand {
             }
         }
 
-        this.handDiv = document.createElement("div");
+        this.div = document.createElement("div");
+
+        this.status = document.createElement("h2");
+        this.div.appendChild(this.status);
 
         this.svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         this.svg.setAttribute('width', this.cards.length * 30 + 70);
         this.svg.setAttribute('height', '90');
-        this.handDiv.appendChild(this.svg);
+        this.div.appendChild(this.svg);
 
         this.scoreText = document.createElement("p");
         this.scoreText.innerHTML = `${this.score}`;
-        this.handDiv.appendChild(this.scoreText);
+        this.div.appendChild(this.scoreText);
 
         if (this.holder.name != "Dealer") {
             this.buttons = document.createElement("div");
             this.buttons.setAttribute('style', 'display: inline-block');
-            this.handDiv.appendChild(this.buttons);
+            this.div.appendChild(this.buttons);
 
             const buttonNames = ["Hit", "Stand", "Split", "Double", "Surrender"];
             const buttonFunctions = [this.hit, this.stand, this.split, this.double, this.surrender];
@@ -117,13 +120,13 @@ class Hand {
                 this.buttons.appendChild(button);
             }
 
-            this.handDiv.appendChild(this.buttons);
+            this.div.appendChild(this.buttons);
     
             let linebreak = document.createElement("br");
-            this.handDiv.appendChild(linebreak);
+            this.div.appendChild(linebreak);
         }
 
-        game.insertBefore(this.handDiv, this.holder.heading.nextSibling);
+        game.insertBefore(this.div, this.holder.heading.nextSibling);
 
         if (this.cards.length == 0) {
             this.hit();
@@ -172,6 +175,7 @@ class Hand {
             if (this.score.length == 0) {
                 this.holder.money -= this.bet;
                 this.displayMessage("Busted", "red");
+                this.stand();
             }
             else if (this.score.length > 2 && this.score[this.score.length - 1] == 21) {
                 this.stand();
@@ -180,8 +184,13 @@ class Hand {
     }
     
     stand() {
-        this.reveal();
         this.buttons.setAttribute('style', 'display: none');
+        for (let hand of this.holder.hands) {
+            if (hand.buttons.style.display != "none") {
+                return;
+            }
+        }
+        this.reveal();
         const dealerTurnInterval = setInterval(() => {
             let dealerScore = dealer.hands[0].score;
             if (dealerScore[dealerScore.length - 1] < 17 && dealerScore.length > 0) {
@@ -190,17 +199,22 @@ class Hand {
             }
             if (dealerScore[dealerScore.length - 1] >= 17 || dealerScore.length == 0) {
                 clearInterval(dealerTurnInterval);
-                const score = this.score;
-                if (score.length == 0 || score[score.length - 1] < dealerScore[dealerScore.length - 1]) {
-                    this.holder.money = this.holder.money - this.bet;
-                    this.displayMessage("You lose!", "red");
-                }
-                else if (dealerScore.length == 0 || score[score.length - 1] > dealerScore[dealerScore.length - 1]) {
-                    this.holder.money = this.holder.money + this.bet;
-                    this.displayMessage("You win!", "lime");
-                }
-                else {
-                    this.displayMessage("Push", "yellow");
+                for (let hand of this.holder.hands) {
+                    if (hand.score.length == 0) {
+                        continue;
+                    }
+                    const score = hand.score;
+                    if (score.length == 0 || score[score.length - 1] < dealerScore[dealerScore.length - 1]) {
+                        hand.holder.money = hand.holder.money - hand.bet;
+                        hand.displayMessage("You lose!", "red");
+                    }
+                    else if (dealerScore.length == 0 || score[score.length - 1] > dealerScore[dealerScore.length - 1]) {
+                        hand.holder.money = hand.holder.money + hand.bet;
+                        hand.displayMessage("You win!", "lime");
+                    }
+                    else {
+                        hand.displayMessage("Push", "yellow");
+                    }
                 }
             }
         }, 1000);
@@ -239,8 +253,8 @@ class Hand {
     
     displayMessage(message, color) {
         this.holder.displayMoney();
-        document.getElementById("status").setAttribute('style', `color: ${color}`);
-        document.getElementById("status").innerHTML = message;
+        this.status.setAttribute('style', `color: ${color}`);
+        this.status.innerHTML = message;
         this.buttons.setAttribute('style', 'display: none');
         document.getElementById("restartButton").setAttribute('style', 'display: inline-block');
     }
@@ -371,8 +385,6 @@ function start() {
     
     document.getElementById("restartButton").innerHTML = "Restart";
     document.getElementById("restartButton").setAttribute('style', 'display: none');
-    document.getElementById("status").setAttribute('style', 'color: white');
-    document.getElementById("status").innerHTML = "";
 
     deck = Deck.shuffle(Deck.createDeck());
 
