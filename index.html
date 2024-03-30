@@ -6,7 +6,12 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Blackjack</h1>
+    <div id="header" >
+        <div style="display: flex; justify-content: space-between;">
+            <h1 style="margin: 0;">Blackjack</h1>
+            <h1 id="playerMoney" style="margin: 0;">$1000</h1>
+        </div>
+    </div>
     <div id="game"></div>
     <button id="restartButton" onclick=start()>Start</button>
     <script src="script.js" id="bet"></script>
