@@ -53,6 +53,10 @@ button:active {
     background-color: #8C8;
 }
 
+button:disabled {
+    background-color: #666;
+}
+
 input {
     width: 100px;
 }

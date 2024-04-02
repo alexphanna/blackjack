@@ -58,12 +58,28 @@ class Hand {
             this.betInput.setAttribute('type', 'number');
             this.betInput.setAttribute('value', this.bet);
             this.betInput.setAttribute('min', '0');
+            this.betInput.onchange = this.evaluateBet.bind(this);
             this.div.appendChild(this.betInput);
     
             this.dealButton = document.createElement("button");
             this.dealButton.innerHTML = "Deal";
             this.dealButton.onclick = this.deal.bind(this);
             this.div.appendChild(this.dealButton);
+        }
+    }
+
+    evaluateBet() {
+        if (this.betInput.value > this.holder.money) {
+            this.dealButton.setAttribute("disabled", "disabled");
+            this.dealButton.title = "Your bet must be less than your money"
+        }
+        else if (this.betInput.value < 0) {
+            this.dealButton.setAttribute("disabled", "disabled");
+            this.dealButton.title = "You can not bet a negative amount"
+        }
+        else {
+            this.dealButton.removeAttribute("disabled");
+            this.dealButton.title = ""
         }
     }
     
