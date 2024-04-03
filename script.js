@@ -65,6 +65,8 @@ class Hand {
             this.dealButton.innerHTML = "Deal";
             this.dealButton.onclick = this.deal.bind(this);
             this.div.appendChild(this.dealButton);
+            
+            this.evaluateBet();
         }
     }
 
@@ -172,6 +174,11 @@ class Hand {
             this.holder.hands[this.holder.hands.length - 2].hit();
         }
         this.holder.draw();
+    
+        if (this.holder.name != "Dealer" && this.holder.hands.length == 1 && this.score.includes(21)) {
+            this.holder.money += this.bet * 3 / 2;
+            this.displayMessage("Blackjack", "lime");
+        }
     }
     
     draw() {
@@ -423,25 +430,21 @@ function start() {
 
     player.hands = [];
     dealer.hands = [];
-    
-    document.getElementById("restartButton").innerHTML = "Restart";
+
     document.getElementById("restartButton").setAttribute('style', 'display: none');
 
     deck = Deck.shuffle(Deck.createDeck());
 
     let hand = new Hand(dealer);
-    dealer.hands.push(hand)
+    dealer.hands.push(hand);
     
     hand = new Hand(player);
-    player.hands.push(hand)
-    
-    if (player.hands[0].score.includes(21)) {
-        player.money += player.hands[0].bet * 3 / 2;
-        player.hands[0].displayMessage("Blackjack", "lime");
-    }
+    player.hands.push(hand);
 }
 
 let game = document.getElementById("game");
 let deck;
 let dealer = new Player("Dealer");
 let player = new Player("Player");
+
+start();
