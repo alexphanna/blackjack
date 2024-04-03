@@ -88,7 +88,7 @@ class Hand {
     get score() {
         let sums = [0];
         for (let card of this.cards) {
-            if (card.faceUp) {
+            if (!card.faceUp) {
                 continue;
             }
             if (card.value == 1) {
@@ -97,7 +97,7 @@ class Hand {
             for (let i = 0; i < sums.length; i++) {
                 sums[i] += card.points;
                 if (sums[i] > 21) {
-                    sums.splice(i, sums.length - i);
+                    sums.splice(i, sums.length - i)
                     break;
                 }
             }
@@ -133,12 +133,11 @@ class Hand {
             this.buttons.setAttribute('style', 'display: inline-block');
             this.div.appendChild(this.buttons);
 
-            const buttonNames = ["Hit", "Stand", "Split", "Double", "Surrender"];
-            const buttonFunctions = [this.hit, this.stand, this.split, this.double, this.surrender];
+            const buttonNames = ["Hit", "Stand", "Double", "Surrender"];
+            const buttonFunctions = [this.hit, this.stand, this.double, this.surrender];
             const buttonTitles = [
                 "Take another card",
                 "Take no more cards",
-                "Create two hands from a starting hand where both cards are the same value. Each new hand gets a second card resulting in two starting hands",
                 "Increase the initial bet by 100% and take exactly one more card",
                 "Forfeit half the bet and end the hand immediately"
             ]
@@ -150,6 +149,13 @@ class Hand {
                 button.innerHTML = buttonNames[i];
                 this.buttons.appendChild(button);
             }
+
+            this.splitButton = document.createElement("button");
+            this.splitButton.title = "Create two hands from a starting hand where both cards are the same value. Each new hand gets a second card resulting in two starting hands";
+            this.splitButton.onclick = this.split.bind(this);
+            this.splitButton.innerHTML = "Split";
+            this.splitButton.setAttribute("disabled", "disabled")
+            this.buttons.appendChild(this.splitButton);
 
             this.div.appendChild(this.buttons);
     
@@ -170,6 +176,9 @@ class Hand {
         if (this.holder.name != "Dealer" && this.holder.hands.length == 1 && this.score.includes(21)) {
             this.holder.money += this.bet * 3 / 2;
             this.displayMessage("Blackjack", "lime");
+        }
+        else if (this.holder.name != "Dealer" && (this.cards.length == 2 && this.cards[0].points == this.cards[1].points)) {
+            this.splitButton.removeAttribute("disabled")
         }
     }
     
@@ -262,7 +271,7 @@ class Hand {
     }
     
     split() {
-        if (true || (this.cards.length == 2 && this.cards[0].points == this.cards[1].points)) {
+        if (this.cards.length == 2 && this.cards[0].points == this.cards[1].points) {
             const newHand = new Hand(this.holder);
             newHand.cards.push(this.cards.pop());
             this.holder.hands.push(newHand);
