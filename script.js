@@ -86,31 +86,23 @@ class Hand {
     }
     
     get score() {
-        let sum = [0];
+        let sums = [0];
         for (let card of this.cards) {
             if (card.faceUp) {
-                if (card.value == 1) {
-                    sum.push(sum[sum.length - 1] + 10);
-                }
-                if (card.value > 10) {
-                    for (let i = 0; i < sum.length; i++) {
-                        sum[i] += 10;
-                    }
-                }
-                else {
-                    for (let i = 0; i < sum.length; i++) {
-                        sum[i] += card.value;
-                    }
-                }
-                for (let i = 0; i < sum.length; i++) {
-                    if (sum[i] > 21) {
-                        sum.splice(i, sum.length - i);
-                        break;
-                    }
+                continue;
+            }
+            if (card.value == 1) {
+                sums.push(sums[sums.length - 1] + 10);
+            }
+            for (let i = 0; i < sums.length; i++) {
+                sums[i] += card.points;
+                if (sums[i] > 21) {
+                    sums.splice(i, sums.length - i);
+                    break;
                 }
             }
         }
-        return sum;
+        return sums;
     }
 
     deal() {
