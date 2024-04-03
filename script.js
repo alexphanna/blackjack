@@ -85,24 +85,24 @@ class Hand {
         }
     }
     
-    get score() {
-        let sums = [0];
-        for (let card of this.cards) {
+    static score(cards) {
+        let scores = [0];
+        for (let card of cards) {
             if (!card.faceUp) {
                 continue;
             }
             if (card.value == 1) {
-                sums.push(sums[sums.length - 1] + 10);
+                scores.push(scores[scores.length - 1] + 10);
             }
-            for (let i = 0; i < sums.length; i++) {
-                sums[i] += card.points;
-                if (sums[i] > 21) {
-                    sums.splice(i, sums.length - i)
+            for (let i = 0; i < scores.length; i++) {
+                scores[i] += card.points;
+                if (scores[i] > 21) {
+                    scores.splice(i, scores.length - i)
                     break;
                 }
             }
         }
-        return sums;
+        return scores;
     }
 
     deal() {
@@ -194,7 +194,7 @@ class Hand {
     }
     
     updateScore() {
-        const score = this.score;
+        const score = Hand.score(this.cards);
         if (score.length == 0) {
             this.scoreText.setAttribute('style', 'color: red');
             this.scoreText.innerHTML = `> 21`;
@@ -215,11 +215,12 @@ class Hand {
         card.draw(this.svg, (this.cards.length - 1) * 30 + 0, 0);
         this.updateScore();
         if (this.holder.name != "Dealer") {
-            if (this.score.length == 0) {
+            const score = Hand.score(this.cards);
+            if (score.length == 0) {
                 this.holder.money -= this.bet;
                 this.displayMessage("Busted", "red");
             }
-            else if (this.score.length > 2 && this.score[this.score.length - 1] == 21) {
+            else if (score.length > 2 && score[score.length - 1] == 21) {
                 this.stand();
             }
         }
@@ -234,18 +235,18 @@ class Hand {
         }
         this.reveal();
         const dealerTurnInterval = setInterval(() => {
-            let dealerScore = dealer.hands[0].score;
+            let dealerScore = Hand.score(dealer.hands[0].cards);
             if (dealerScore[dealerScore.length - 1] < 17 && dealerScore.length > 0) {
                 dealer.hands[0].hit();
-                dealerScore = dealer.hands[0].score;
+                dealerScore = Hand.score(dealer.hands[0].cards);
             }
             if (dealerScore[dealerScore.length - 1] >= 17 || dealerScore.length == 0) {
                 clearInterval(dealerTurnInterval);
                 for (let hand of this.holder.hands) {
-                    if (hand.score.length == 0) {
+                    if (Hand.score(hand.cards).length == 0) {
                         continue;
                     }
-                    const score = hand.score;
+                    const score = Hand.score(hand.cards);
                     if (score.length == 0 || score[score.length - 1] < dealerScore[dealerScore.length - 1]) {
                         hand.holder.money = hand.holder.money - hand.bet;
                         hand.displayMessage("You lose!", "red");
@@ -265,7 +266,8 @@ class Hand {
     double() {
         this.bet *= 2;
         this.hit();
-        if (this.score[this.score.length - 1] <= 21) {
+        const score = Hand.score(this.cards);
+        if (score[score.length - 1] <= 21) {
             this.stand();
         }
     }
