@@ -37,6 +37,11 @@ class Player {
             hand.draw();
         }
     }
+    showButtons() {
+        for (let hand of this.hands) {
+            hand.buttons.style.display = "inline-block";
+        }
+    }
 }
 
 class Hand {
@@ -106,7 +111,6 @@ class Hand {
     }
 
     deal() {
-        this.holder.toggleName();
         if (this.holder.name != "Dealer") {
             this.bet = Number(this.betInput.value);
             while (this.div.firstChild) {
@@ -166,6 +170,7 @@ class Hand {
         if (this.cards.length == 0) {
             this.hit();
             this.hit();
+            this.holder.toggleName();
         }
         else if (this.cards.length == 1) {
             this.hit();
@@ -173,12 +178,12 @@ class Hand {
         }
         this.holder.draw();
     
-        if (this.holder.name != "Dealer" && this.holder.hands.length == 1 && this.score.includes(21)) {
-            this.holder.money += this.bet * 3 / 2;
-            this.displayMessage("Blackjack", "lime");
-        }
-        else if (this.holder.name != "Dealer" && (this.cards.length == 2 && this.cards[0].points == this.cards[1].points)) {
-            this.splitButton.removeAttribute("disabled")
+        if (this.holder.name != "Dealer") {
+            if (this.holder.hands.length == 1 && Hand.score(this.cards).includes(21)) {
+                this.holder.money += this.bet * 3 / 2;
+                this.displayMessage("Blackjack", "lime");
+            }
+            this.holder.showButtons();
         }
     }
     
@@ -222,6 +227,9 @@ class Hand {
             }
             else if (score.length > 2 && score[score.length - 1] == 21) {
                 this.stand();
+            }
+            if (this.cards.length == 2 && this.cards[0].points == this.cards[1].points) {
+                this.splitButton.removeAttribute("disabled")
             }
         }
     }
@@ -277,6 +285,8 @@ class Hand {
             const newHand = new Hand(this.holder);
             newHand.cards.push(this.cards.pop());
             this.holder.hands.push(newHand);
+            this.buttons.style.display = "none";
+            this.splitButton.setAttribute("disabled", "disabled")
         }
     }
     
